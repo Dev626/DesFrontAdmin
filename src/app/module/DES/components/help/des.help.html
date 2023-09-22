@@ -1,0 +1,3 @@
+<div class="help" *ngIf="dcs.data && dcs.data.un_config_format">
+  <a (click)="$event.stopPropagation()" href="https://wa.me/{{dcs.data.un_config_format.prefijo_telefono+buscar_whatsapp_soporte_numero}}?text={{buscar_whatsapp_soporte}}" target="_blank" class="btn btn-success mr-1"><i class="fab fa-whatsapp"></i> DE SOPORTE</a>
+</div>

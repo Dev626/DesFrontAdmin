@@ -1,0 +1,94 @@
+<div class="container-fluid" *ngIf="dcs.data.un_config">
+    <button type="button" style="width: 100%;" [routerLink]="['/']" class="btn btn-primary btn-lg mb-3"><i class="fas fa-map-marker-alt"></i>&nbsp;Buscar tiendas</button>
+    <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs">
+        <li [ngbNavItem]="1">
+          <a ngbNavLink><i class="fas fa-shopping-bag"></i>&nbsp;Pedidos</a>
+          <ng-template ngbNavContent>
+            <oh-filterTab [save]="'des_order_list'" [(filter)]="filter" [template]="filterWindow" [length]="items.length" [obj_pagin]="pagin" (list)="despedidoClienteListar()"></oh-filterTab>
+            <div class="list-group mb-3" *ngIf="items && items.length > 0">
+              <a class="list-group-item list-group-item-action" href="#" [routerLink]="['detail', item.pedido_id]" *ngFor="let item of items">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="m-0 font-weight-bold">
+                    <span class="text-primary">Pedido #{{item.pedido_id}} <span class="badge" [ngClass]="dcs.data.estado_pedido[item.estado].badge"> {{dcs.data.estado_pedido[item.estado].descripcion}}</span></span><br>
+                    <div *ngIf="cse.tieneRol(['des_admin'])"><i class="fas fa-user-check text-success"></i> {{item.cliente}}</div>
+                    <i [class]="item.categoria_icono"></i> {{item.tienda_nombre}}
+                  </h6>
+                  <div style="text-align: right;">
+                    <small>Hace {{item.fecha_detalle}}</small><br>
+                    <span class="text-bold">{{item.total | ohCurrencyFormat: dcs.data.moneda_format.simbolo : dcs.data.moneda_format.ICU}}</span>
+                  </div>
+                </div>
+              </a>
+            </div>
+            <div *ngIf="!items || items.length == 0">
+              <ngb-alert type="info">Todavia no tienes pedidos, que esperas para buscar una tienda cerca !</ngb-alert>
+            </div>
+          </ng-template>
+        </li>
+        <li [ngbNavItem]="2" *ngIf="tiendas && tiendas.length > 0">
+          <a ngbNavLink><i class="fas fa-store-alt"></i>&nbsp;Favoritos</a>
+          <ng-template ngbNavContent>
+            <div class="list-group mb-3">
+              <a class="list-group-item list-group-item-action" href="#" [routerLink]="['shop', item.tienda_id]" *ngFor="let item of tiendas; let i = index"> 
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="m-0 font-weight-bold">
+                    <span class="text-primary">Tienda #{{item.tienda_id}}</span><br>
+                    <i [class]="item.categoria_icono"></i> {{item.nombre}}
+                  </h6>
+                  <span class="text-warning p-3 list-group-right-pill" (click)="desvincular($event, item.tienda_id, i)"><i class="fas fa-star"></i></span>
+                </div>
+                <div class="d-flex w-100">
+                  <a (click)="$event.stopPropagation()" href="https://wa.me/{{dcs.data.un_config_format.prefijo_telefono+item.telefono}}?text={{buscar_whatsapp_texto_de}}" target="_blank" class="btn btn-success mr-1"><i class="fab fa-whatsapp"></i> {{dcs.data.un_config_format.prefijo_telefono+' '+item.telefono}}</a>
+                  <des-seller-map-location [tienda]="item"></des-seller-map-location>
+                </div>
+              </a>            
+            </div>
+          </ng-template>
+        </li>
+      </ul>
+    <div [ngbNavOutlet]="nav" class="mt-2"></div>
+</div>
+<ng-template #filterWindow let-c="close" let-d="dismiss">
+  <div class="modal-header">
+      <span class="h5 m-0"><i class="fa fa-filter mr-1"></i>Filtrar</span>
+      <a href="#" class="close text-dark" aria-label="Close" (click)="$event.preventDefault(); d('Cross click')">
+          <i class="fas fa-times fa-xs"></i>
+          </a>
+  </div>
+  <div class="modal-body">
+    <form>
+        <div class="form-group row">
+            <label class="col-sm-2 col-form-label">Estado</label>
+            <div class="col-sm-10">
+                <select name="inp_estado" class="form-control" [(ngModel)]="filter.field.estado.value">
+                    <option [value]="null">TODOS</option>
+                    <option *ngFor="let estado of dcs.data.catalogo.estado_pedido" [value]="estado.catalogo_id">{{estado.descripcion}}</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-sm-2 col-form-label">Nro. pedido</label>
+            <div class="col-sm-10">
+                <input name="inp_pedido_id" ohFocusOnInit class="form-control" [(ngModel)]="filter.field.pedido_id.value" (keyup.enter)="c('doFilter')" type="number" [(placeholder)]="filter.field.pedido_id.label">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-sm-2 col-form-label">Tienda</label>
+            <div class="col-sm-10">
+                <input name="inp_tienda" class="form-control" [(ngModel)]="filter.field.tienda_nombre.value" type="text" (keyup.enter)="c('doFilter')" [(placeholder)]="filter.field.tienda_nombre.label">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-sm-2 col-form-label">Cliente</label>
+            <div class="col-sm-10">
+                <input name="inp_cliente" class="form-control" [(ngModel)]="filter.field.cliente.value" type="text" (keyup.enter)="c('doFilter')" [(placeholder)]="filter.field.cliente.label">
+            </div>
+        </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+      <button type="button" class="btn btn-outline-danger" (click)="c('cancel')"><i class="fas fa-times-circle mr-1"></i> Cancelar</button>
+      <button type="submit" class="btn btn-outline-primary" (click)="c('doFilter')"><i class="fas fa-filter mr-1"></i>Filtrar</button>
+  </div>
+</ng-template>
+<des-help></des-help>

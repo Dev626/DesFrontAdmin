@@ -1,0 +1,14 @@
+.oh_mapShadow {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 -1px 0px rgba(0, 0, 0, 0.02);
+}
+
+.oh_mapDir {
+    /*height: 500px;*/
+    width: 100%;
+}
+
+.oh_mapSearch {
+    position: absolute;
+    z-index: 1;
+    width: calc(100% - 10px);
+}

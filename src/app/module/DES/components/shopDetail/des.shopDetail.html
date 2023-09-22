@@ -1,0 +1,182 @@
+<div class="container-fluid">
+    <div class="card shadow mb-4"> 
+        <div class="card-header py-3" *ngIf="tienda.nombre">
+            <div class="row">
+                <div class="col-12 col-md-6">
+                    <h6 class="m-0 font-weight-bold">
+                        <span class="text-primary">Pedido #{{pedido.pedido_id}} / Tienda #{{tienda.tienda_id}}</span><br>
+                        <a *ngIf="tipo_vista == 'client'" href="#" [routerLink]="['/Store', tienda.tienda_id]" class="mr-2 text-info"><i [class]="tienda.categoria_icono"></i> {{tienda.nombre}}</a>
+                        <span *ngIf="tipo_vista == 'seller'" class="mr-2"><i [class]="tienda.categoria_icono"></i> {{tienda.nombre}}</span>
+                        <span class="badge" [ngClass]="dcs.data.estado_pedido[tienda.estado].badge"> {{dcs.data.estado_pedido[tienda.estado].descripcion}}</span>
+                    </h6>
+                </div>
+                <div class="col-12 col-md-6 text-right">
+                    <a href="#" (click)="$event.preventDefault(); imprimir()" class="btn btn-primary mr-1"><i class="fas fa-print"></i> Imprimir</a>
+                    <a href="https://wa.me/{{dcs.data.un_config_format.prefijo_telefono+tienda.telefono}}?text={{buscar_whatsapp_texto_de}}" target="_blank" class="btn btn-success mr-1"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://wa.me/?text={{buscar_whatsapp_compartir_url}}" target="_blank" class="btn btn-success mr-1"><i class="fas fa-share-alt"></i></a>
+                    <des-seller-map-location [tienda]="tienda"></des-seller-map-location>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <ul ngbNav #navDetail="ngbNav" [(activeId)]="pestana_activa" class="nav-tabs">
+                <li [ngbNavItem]="1">
+                  <a ngbNavLink><i class="fas fa-paper-plane"></i> Envio</a>
+                  <ng-template ngbNavContent>
+                    <div class="form-row">
+                        <div class="form-group col-6 col-sm-6 col-md-4">
+                            <label>Nro de pedido</label>
+                            <input class="form-control" value="{{pedido.pedido_id}}" type="text" [disabled]="true">
+                        </div>
+                        <div class="form-group col-6 col-sm-6 col-md-4">
+                            <label>Tipo de Entrega</label>
+                            <input class="form-control" value="{{pedido.tipo_entrega_detalle}}" type="text" [disabled]="true">
+                        </div>
+                        <div class="form-group col-6 col-sm-6 col-md-4">
+                            <label>Medio de pago</label>
+                            <input class="form-control" value="{{pedido.medio_pago_detalle}}" type="text" [disabled]="true">
+                        </div>
+                        <div class="form-group col-6 col-sm-6 col-md-4">
+                            <label>Cliente</label>
+                            <input class="form-control" value="{{pedido.cliente}}" type="text" [disabled]="true">
+                        </div>
+                        <div class="form-group col-6 col-sm-6 col-md-4" *ngIf="pedido.telefono">
+                            <label>Teléfono</label>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">{{dcs.data.un_config_format.prefijo_telefono}}</span>
+                                </div>
+                                <input type="text" class="form-control" [disabled]="true" value="{{pedido.telefono}}">
+                                <div class="input-group-append">
+                                    <a *ngIf="tipo_vista == 'seller'" (click)="$event.stopPropagation()" href="https://wa.me/{{dcs.data.un_config_format.prefijo_telefono+pedido.telefono}}?text={{buscar_whatsapp_texto_cliente}}" target="_blank" class="btn btn-success mr-1"><i class="fab fa-whatsapp"></i></a>
+                                    <button *ngIf="tipo_vista == 'seller'" class="btn btn-outline-secondary" placement="left" [ohCopyText]="dcs.data.un_config_format.prefijo_telefono+pedido.telefono" ngbTooltip="Click para copiar el teléfono" type="button"><i class="fas fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group col-12 col-sm-6 col-md-4" *ngIf="pedido.direccion">
+                            <label>Dirección</label>
+                            <div class="input-group mb-3">
+                                <input class="form-control" value="{{pedido.direccion}}" type="text" [disabled]="true">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" *ngIf="pedido.latitud && pedido.longitud" placement="left" (click)="verUbicacion(modalUbicacionCliente)" ngbTooltip="Ver ubicación" type="button"><i class="fas fa-map-marker-alt"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group col-12 col-sm-6 col-md-4">
+                            <label>Origen de atención</label>
+                            <div class="input-group mb-3">
+                                <span *ngIf="pedido.tipo_atencion == '1'" class="badge badge-info" ngbTooltip="Pedido por el cliente"><i class="fas fa-user-check"></i> Pedido por el cliente</span>
+                                <span *ngIf="pedido.tipo_atencion == '2'" class="badge badge-danger" ngbTooltip="Registrado por la tienda"><i class="fas fa-people-carry"></i> Registrado por la tienda</span>
+                            </div>
+                        </div>
+                    </div>
+                    <h2>Importe total : <b>{{total | ohCurrencyFormat: dcs.data.moneda.simbolo : dcs.data.moneda.ICU}}</b></h2>
+                  </ng-template>
+                </li>
+                <li [ngbNavItem]="2">
+                  <a ngbNavLink><i class="fas fa-store-alt"></i> Detalle</a>
+                  <ng-template ngbNavContent>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr role="row">
+                                    <th>Producto</th>
+                                    <th class="text-right">Precio U.</th>
+                                    <th class="text-right">Cantidad</th>
+                                    <th class="text-right">Sub total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of items">                                            
+                                    <td>
+                                        <div style="position: absolute; background-color: white;" class="text-bold">#{{item.tienda_producto_id}}</div>
+                                        <img src="{{item.url}}" class="card-img-top" style="max-width: 6rem;">{{item.nombre}}
+                                    </td>
+                                    <td class="text-right">{{item.precio | ohCurrencyFormat: dcs.data.moneda.simbolo : dcs.data.moneda.ICU}}</td>
+                                    <td class="text-right">{{item.cantidad}}</td>
+                                    <td class="text-right text-bold">{{item.monto_total | ohCurrencyFormat: dcs.data.moneda.simbolo : dcs.data.moneda.ICU}}</td>                                            
+                                </tr> 
+                                <tr>
+                                    <td colspan="3">Total</td> 
+                                    <td class="text-right text-bold">{{total | ohCurrencyFormat: dcs.data.moneda.simbolo : dcs.data.moneda.ICU}}</td>                                                           
+                                </tr>                      
+                            </tbody>
+                        </table>
+                    </div>
+                  </ng-template>
+                </li>
+                <li [ngbNavItem]="3">
+                  <a ngbNavLink><i class="fas fa-list-ol"></i> Atención</a>
+                  <ng-template ngbNavContent>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr role="row">
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Usuario</th>
+                                    <th>Comentario</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let historial of pedido_historial">      
+                                    <td>{{historial.fecha_registro | date: cse.config.formatDateTime}}</td>      
+                                    <td><span class="badge" [ngClass]="dcs.data.estado_pedido[historial.estado].badge"> {{dcs.data.estado_pedido[historial.estado].descripcion}}</span></td>     
+                                    <td>
+                                        <oh-thumbnail [id]="historial.usuario_id" [name]="historial.nombres" [lastName]="historial.apellidos"></oh-thumbnail>
+                                    </td>     
+                                    <td>{{historial.comentario}}</td>                                         
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                  </ng-template>
+                </li>
+              </ul>
+              <div [ngbNavOutlet]="navDetail" class="mt-2"></div>
+        </div>
+        <div class="card-footer">
+            <button *ngIf="tipo_vista == 'seller' && tienda.estado == dcs.config.estado_pedido.registrado" (click)="ejecutar('recepcionar', modalConfirmar)" class="btn btn-outline-info mr-1"><i class="fas fa-luggage-cart"></i> Recepcionar</button>
+            <button *ngIf="tipo_vista == 'seller' && tienda.estado == dcs.config.estado_pedido.recepcionado" (click)="ejecutar('atender', modalConfirmar)" class="btn btn-outline-success mr-1"><i class="fas fa-thumbs-up"></i> Atender</button>
+            <button *ngIf="tienda.estado == dcs.config.estado_pedido.registrado || (tipo_vista == 'seller' && tienda.estado == dcs.config.estado_pedido.recepcionado)" (click)="ejecutar('cancelar', modalConfirmar)" class="btn btn-outline-danger mr-1"><i class="fas fa-times-circle"></i> Cancelar Pedido</button>
+            <button [routerLink]="['../../']" class="btn btn-outline-primary mr-1"><i class="fas fa-undo-alt "></i> Volver al listado</button>
+        </div>
+    </div>
+</div>
+<ng-template #modalUbicacionCliente let-c="close" let-d="dismiss">
+    <div class="modal-header">
+        <h5 class="modal-title" id="modal-basic-title">
+            Ubicación
+        </h5>
+        <a href="#" class="close" aria-label="Close" (click)="$event.preventDefault(); d('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </a>
+    </div>
+    <div class="modal-body">
+        }<!--
+        <agm-map class="map-dir-sm" [zoom]="15" [latitude]="pedido.latitud" [longitude]="pedido.longitud" [usePanning]="true">
+            <agm-marker [latitude]="pedido.latitud" [longitude]="pedido.longitud"></agm-marker>
+        </agm-map>-->
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-info" (click)="c('Close')"><i class="fas fa-reply"></i> Cerrar</button>
+    </div>
+</ng-template>
+<ng-template #modalConfirmar let-c="close" let-d="dismiss">
+    <div class="modal-header">
+        <h5 class="modal-title" id="modal-basic-title">
+            ¿Confirma {{confirmacion.tipo}} el pedido?
+        </h5>
+        <a href="#" class="close" aria-label="Close" (click)="$event.preventDefault(); d('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </a>
+    </div>
+    <div class="modal-body">
+        <textarea class="form-control" id="inp_comentario" #inp_comentario="ngModel" name="inp_comentario" [(ngModel)]="confirmacion.comentario" maxlength="500" style="width: 100%;height: 100px;"></textarea>
+        {{confirmacion.comentario.length}}/500
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-info" (click)="d('Return')"><i class="fas fa-reply"></i> Retornar</button>
+        <button type="button" class="btn btn-success" (click)="despedidoEditarEstado(c)"><i class="far fa-hand-point-up"></i> Aceptar</button>
+    </div>
+</ng-template>

@@ -1,0 +1,114 @@
+<div id="ovnContent" class="ind-body-maxContent">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-xl-10 col-lg-12 col-md-9" *ngIf="config.defecto">
+                <div class="card o-hidden border-0 shadow-lg my-2">
+                    <mdes-nav [sistema_base]="cse.data.system" [config]="config" [doLogoutEvent]="doLogoutEvent" (onCountryChange)="countryChange($event)" [mostrarAcceso]="false"></mdes-nav>
+                    <div class="card-body p-3">
+						<h3 class="h4 text-gray-900 mb-4 text-center">
+							Regístrate como vendedor
+						</h3>
+						<div class="mt-3">
+							<ngb-alert [dismissible]="false">
+								<i class="fas fa-store"></i> Que esperas para crear tu tienda virtual y empezar a vender, reinvéntate e innova y haz crecer tu negocio!
+							</ngb-alert>
+						</div>
+						<form class="user" #frmRegister="ngForm">
+							<div class="form-group">
+								<input #inp_empresa="ngModel" placeholder="Empresa" id="inp_empresa" name="inp_empresa" class="form-control form-control-user" [(ngModel)]="dateRegister.razon_social" type="text" [ohInputFormat]="'upper'" required="true" minlength="2" maxlength="100" ohFocusOnInit>
+								<div *ngIf="inp_empresa.invalid && (inp_empresa.dirty || inp_empresa.touched)" class="alert-form">
+									<ul>
+										<li *ngIf="inp_empresa.errors['required']">El campo es requerido.</li>
+										<li *ngIf="inp_empresa.errors['minlength']">El campo debe tener como mínimo 2 caracteres.</li>
+										<li *ngIf="inp_empresa.errors['maxlength']">El campo debe tener como máximo 100 caracteres.</li>
+									</ul>
+								</div>
+							</div>
+							<div class="form-group row">
+							  <div class="col-6 mb-3 mb-sm-0">
+								<input #inpName="ngModel" name="inpName" placeholder="Nombre" class="form-control form-control-user" [(ngModel)]="dateRegister.name" [ohInputFormat]="'upper'" type="text" required="true" minlength="2" maxlength="100" >
+								<div *ngIf="inpName.invalid && (inpName.dirty || inpName.touched)" class="alert-form">
+									<ul>
+										<li *ngIf="inpName.errors['required']">El campo es requerido.</li>
+										<li *ngIf="inpName.errors['minlength']">El campo debe tener como mínimo 2 caracteres.</li>
+										<li *ngIf="inpName.errors['maxlength']">El campo debe tener como máximo 100 caracteres.</li>
+									</ul>
+								</div>
+							  </div>
+							  <div class="col-6">
+								<input #inpLastName="ngModel" name="inpLastName" placeholder="Apellido" class="form-control form-control-user" [(ngModel)]="dateRegister.lastName" [ohInputFormat]="'upper'" type="text" required="true" minlength="2" maxlength="100">
+								<div *ngIf="inpLastName.invalid && (inpLastName.dirty || inpLastName.touched)" class="alert-form">
+									<ul>
+										<li *ngIf="inpLastName.errors['required']">El campo es requerido.</li>
+										<li *ngIf="inpLastName.errors['minlength']">El campo debe tener como mínimo 2 caracteres.</li>
+										<li *ngIf="inpLastName.errors['maxlength']">El campo debe tener como máximo 100 caracteres.</li>
+									</ul>
+								</div>
+							  </div>
+							</div>
+							<div class="form-group">
+								<input #inpEmail="ngModel" placeholder="Email" name="inpRegisterEmail" class="form-control form-control-user" [(ngModel)]="dateRegister.email" type="email" [ohInputFormat]="'upper'" email required="true" minlength="8" maxlength="100">
+								<div *ngIf="inpEmail.invalid && (inpEmail.dirty || inpEmail.touched)" class="alert-form">
+										<ul>
+										<li *ngIf="inpEmail.errors['required']">El campo es requerido.</li>
+										<li *ngIf="inpEmail.errors['minlength']">El campo debe tener como mínimo 8 caracteres.</li>
+										<li *ngIf="inpEmail.errors['maxlength']">El campo debe tener como máximo 100 caracteres.</li>
+										<li *ngIf="inpEmail.errors['email']">Ingrese un email correcto.</li>
+									</ul>
+								</div>
+							</div>
+							<div class="form-group row">
+							  <div class="col-6 mb-3 mb-sm-0">
+								<input #inpPassword="ngModel" placeholder="Clave" autocomplete="new-password" name="inpPassword" class="form-control form-control-user" [(ngModel)]="dateRegister.password" type="password" [pattern]="seguridad.seguridad_expreg" required="true">
+								<div *ngIf="inpPassword.invalid && (inpPassword.dirty || inpPassword.touched)" class="alert-form">
+									<ul>
+										<li *ngIf="inpPassword.errors['required']">El campo es requerido.</li>
+										<li *ngIf="inpPassword.errors['pattern']">La clave debe contener por lo menos
+											<div [innerHTML]="seguridad.seguridad_detalle | ohSafeHtml"></div>
+										</li>
+									</ul>
+								</div>
+							  </div>
+							  <div class="col-6">
+								<input #inpRepeatPassword="ngModel" placeholder="Repetir clave" autocomplete="new-password" name="inpRepeatPassword" class="form-control form-control-user" [(ngModel)]="dateRegister.repeatPassword" type="password" required="true" ohValidateEqual="inpPassword">
+								<div *ngIf="inpRepeatPassword.invalid && (inpRepeatPassword.dirty || inpRepeatPassword.touched)" class="alert-form">
+									<ul>
+										<li *ngIf="inpRepeatPassword.errors['required']">El campo es requerido.</li>
+										<li *ngIf="!inpRepeatPassword.errors['validateEqual']">Debes repetir la misma clave.</li>
+									</ul>
+								</div>
+							  </div>
+							</div>
+							<button type="button" [disabled]="frmRegister.invalid" class="btn btn-primary btn-us.er btn-block" style="cursor: pointer;" (click)="register()">Registrarse</button>
+							<div class="mt-3">
+								<ngb-alert [dismissible]="false" type="info">
+									<i class="fas fa-user-shield"></i> También puedes registrarte accediendo directamente con tu cuenta de Google o Facebook!
+								</ngb-alert>
+							</div>
+							<div class="row">
+								<div class="col-sm-6 mb-sm-0 mb-2">
+									<a (click)="gmailLogin()" style="color: azure;" ngbTooltip="Ingresar mediante google" class="btn btn-google btn-user btn-block">
+										<i class="fab fa-google fa-fw"></i> Google
+									</a>
+								</div>
+								<div class="col-sm-6 mb-2">
+									<a (click)="facebooklogin()" style="color: azure;" ngbTooltip="Ingresar mediante Facebook" class="btn btn-facebook btn-user btn-block">
+										<i class="fab fa-facebook-f"></i> Facebook
+									</a>
+								</div>
+							</div>
+						</form>
+						<hr>
+						<div class="text-center">
+							<a class="small" [routerLink]="['/']">Ya tienes cuenta? Loguéate!</a>
+						</div>
+						<div class="row text-center pt-2 pb-2">
+								<div class="col" style="font-size: 12px;">© Delivery Smart - Powered by <a href="https://ovenfo.com/" target="_blank">Ovenfo</a></div>
+						</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<dsh-help [config]="config"></dsh-help>

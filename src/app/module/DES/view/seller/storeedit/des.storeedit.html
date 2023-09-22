@@ -1,0 +1,800 @@
+<div class="container-fluid">
+    <span *ngIf="tienda_nueva">
+      <ngb-alert type="info">¿Todavia no tienes una tienda?, que esperas registra una !</ngb-alert>
+    </span>
+    <div class="card shadow mb-4">
+        <ul ngbNav #nav="ngbNav" [(activeId)]="nac_activo" class="nav-pills">
+            <li [ngbNavItem]="1">
+                <a ngbNavLink>
+                    <i *ngIf="item.tienda_id" [class]="item.categoria_icono"></i> Mi Tienda
+                </a>
+                <ng-template ngbNavContent>
+                    <a href="https://wa.me/?text={{buscar_whatsapp_compartir_url}}" style="width: 100%;" target="_blank" class="btn btn-success mr-1 btn-lg mb-3"><i class="fas fa-share-alt"></i> Compartir tienda</a>
+                    <form #frmCategoria="ngForm" class="form-enable">
+                        <div class="form-row">
+                            <div class="form-group col-12" *ngIf="cse.tieneRol(['des_admin']) && (clientes && clientes.length > 0)">
+                                <label>Cliente</label>
+                                <oh-predictive-text [form]="frmCategoria" [name]="'inp_cliente_id'" [(value)]="item.empresa_id" [data]="clientes" [searchBy]="['cliente']" [return]="'empresa_id'" [openOnClick]="true" [required]="true"></oh-predictive-text>
+                            </div>
+                            <div class="form-group col-12 col-sm-4">
+                                <label>Nombre de tienda</label>
+                                <input #inp_nombre="ngModel" class="form-control" name="inp_nombre" [(ngModel)]="item.nombre" type="text" required="true" maxlength="100">
+                                <div *ngIf="inp_nombre.invalid && (inp_nombre.dirty || inp_nombre.touched)" class="alert-form">
+                                    <ul>
+                                        <li *ngIf="inp_nombre.errors['required']">El campo es requerido.</li>
+                                        <li *ngIf="inp_nombre.errors['maxlength']">El campo debe tener como máximo 20 caracteres.
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="form-group col-6 col-sm-4">
+                              <label>Celular (WhatsApp) <i class="fab fa-whatsapp text-success"></i></label>
+                              <input #inp_telefono="ngModel" class="form-control" name="inp_telefono" [(ngModel)]="item.telefono" type="tel"
+                                required="true" maxlength="100">
+                              <div *ngIf="inp_telefono.invalid && (inp_telefono.dirty || inp_telefono.touched)" class="alert-form">
+                                <ul>
+                                  <li *ngIf="inp_telefono.errors['required']">El campo es requerido.</li>
+                                  <li *ngIf="inp_telefono.errors['maxlength']">El campo debe tener como máximo 20 caracteres.
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="form-group col-6 col-sm-4">
+                              <label>Descripcion</label>
+                              <textarea #inp_descripcion_breve="ngModel"  class="form-control" name="inp_descripcion_breve" [(ngModel)]="item.descripcion_breve"></textarea>
+                            </div>
+                            <div class="form-group col-6 col-sm-4">
+                                <label>Categoría</label>
+                                <select #inp_categoria="ngModel" name="inp_tipo_documento" class="form-control" [(ngModel)]="item.categoria_id" required="true" [disabled]="item.tienda_id && item.productos_activos>0">
+                                    <option *ngFor="let categoria of categorias" [value]="categoria.categoria_id">{{categoria.nombre}}</option>
+                                </select>
+                                <div *ngIf="inp_categoria.invalid && (inp_categoria.dirty || inp_categoria.touched)" class="alert-form">
+                                    <ul>
+                                        <li *ngIf="inp_categoria.errors['required']">El campo es requerido.</li>
+                                        <li *ngIf="inp_categoria.errors['maxlength']">El campo debe tener como máximo 20 caracteres.
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="form-group col-12" *ngIf="item.latitud && item.longitud">
+                                <label>Ubicación</label>
+                                <oh-map-place [(latitude)]="item.latitud" [(longitude)]="item.longitud" (onSelect)="seleccionarPunto($event)" [height]="edit_mode ? 500 : 150" [zoom]="edit_mode ? 14 : 16" [enable_search]="edit_mode"></oh-map-place>
+                            </div>
+                            <div class="form-group col-12 col-sm-4">
+                                <label>Dirección de la tienda</label>
+                                <div class="input-group">
+                                    <input #inp_direccion="ngModel" class="form-control" name="inp_direccion" [(ngModel)]="item.direccion" type="text" maxlength="100" [disabled]="!edit_mode">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-info" type="button" *ngIf="!edit_mode" (click)="cambiarEdicion()"><i class="fas fa-pencil-alt"></i> Editar</button>
+                                    </div>
+                                </div>
+                                <div *ngIf="inp_direccion.invalid && (inp_direccion.dirty || inp_direccion.touched)" class="alert-form">
+                                    <ul>
+                                        <li *ngIf="inp_direccion.errors['required']">El campo es requerido.</li>
+                                        <li *ngIf="inp_direccion.errors['maxlength']">El campo debe tener como máximo 20 caracteres.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="form-group col-12 col-sm-4">
+                                <label><i class="fas fa-user-clock"></i> Horario de atención <span class="badge badge-danger">Nuevo!</span></label><br>
+                                <button (click)="abrirHorario(modalHorario)" class="btn" [ngClass]="{'btn-info': item.indicador_horario!=1, 'btn-success': item.indicador_horario==1}"><i class="far fa-calendar-alt"></i> Programar horario ({{(item.indicador_horario==1)?'Con horario':'Sin horario'}})</button>
+                            </div>
+                            <div class="form-group col-12 col-sm-4">
+                                <label><i class="fas fa-money-bill-wave-alt"></i> Medios de pago <span class="badge badge-danger">Nuevo!</span></label><br>
+                                <button *ngIf="item.pago && (item.pago.indicador_efectivo || item.pago.indicador_tarjeta || item.pago.indicador_transferencia)" (click)="abirMedioPago(modalMedioPago)" class="btn btn-success">
+                                    <span *ngIf="item.pago.indicador_efectivo"> - <i class="fas fa-money-bill-wave"></i> Efectivo</span>
+                                    <span *ngIf="item.pago.indicador_tarjeta"> - <i class="far fa-credit-card"></i> Tarjeta</span>
+                                    <span *ngIf="item.pago.indicador_transferencia"> - <i class="fas fa-money-check-alt"></i> Transferencia</span>
+                                    <span *ngIf="item.pago.indicador_billetera"> - <i class="fas fa-qrcode"></i> Billetera digital</span>
+                                </button>
+                                <button *ngIf="!item.pago || (!item.pago.indicador_efectivo && !item.pago.indicador_tarjeta && !item.pago.indicador_transferencia)" (click)="abirMedioPago(modalMedioPago)" class="btn btn-info"><i class="far fa-calendar-alt"></i> Definir método de pago</button>
+                            </div>
+                            <div class="form-group col-12 col-sm-4">
+                                <label><i class="fas fa-user-check"></i> Tipo de entrega</label><br>
+                                <div class="btn-group btn-group-toggle" >
+                                    <label ngbButtonLabel [ngClass]="{'btn-primary' : item.indicador_entrega, 'btn-outline-primary' : item.indicador_entrega}">
+                                      <input type="checkbox" ngbButton name="inp_indicador_entrega" [(ngModel)]="item.indicador_entrega"> Entrega a domicilio
+                                    </label>
+                                    <label ngbButtonLabel [ngClass]="{'btn-primary' : item.indicador_recojo, 'btn-outline-primary' : item.indicador_recojo}">
+                                      <input type="checkbox" ngbButton name="inp_indicador_recojo" [(ngModel)]="item.indicador_recojo"> Recojo en tienda
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group col-12 col-sm-4">
+                              <label>Logo</label>
+                              <div class="col-12 col-sm-9">
+                                <oh-imageUpload [fotos]="item.fotos" [ruta]="dcs.config.ruta_firestore" [config]="configFotoTienda"
+                                  (eventos)="eventosFotoTienda($event)" [thumbnail]="true"></oh-imageUpload>
+                              </div>
+                            </div>
+                            <div class="form-group col-12 col-sm-4">
+                                <label>Redes Sociales</label>
+                                <div class="col-12 col-sm-9">
+                                  <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1">
+                                      <i class="fab fa-tiktok"></i>
+                                    </span>
+                                    <input #inp_red1="ngModel" class="form-control" name="inp_red1" [(ngModel)]="item.store_social_network[0].url" type="text" placeholder="TikTok" aria-label="TikTok">
+                                  </div>
+                                  <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1">
+                                      <i class="fab fa-facebook-f"></i>
+                                    </span>
+                                    <input #inp_red2="ngModel" class="form-control" name="inp_red2" [(ngModel)]="item.store_social_network[0].url"
+                                      type="text" placeholder="Facebook" aria-label="Facebook">
+                                  </div>
+                                  <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1">
+                                      <i class="fab fa-instagram"></i>
+                                    </span>
+                                    <input #inp_red3="ngModel" class="form-control" name="inp_red3" [(ngModel)]="item.store_social_network[1].url"
+                                      type="text" placeholder="Instagram" aria-label="Instagram">
+                                  </div>
+                                  <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1">
+                                      <i class="fab fa-youtube"></i>
+                                    </span>
+                                    <input #inp_red4="ngModel" class="form-control" name="inp_red4" [(ngModel)]="item.store_social_network[2].url"
+                                      type="text" placeholder="Youtube" aria-label="Youtube">
+                                  </div>
+                                  <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1">
+                                      <i class="fab fa-twitter"></i>
+                                    </span>
+                                    <input #inp_red5="ngModel" class="form-control" name="inp_red5" [(ngModel)]="item.store_social_network[3].url"
+                                      type="text" placeholder="Twitter" aria-label="Twitter">
+                                  </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="row pb-3">
+                        <div class="col-6 text-left">
+                            <button (click)="grabar()" [disabled]="frmCategoria.invalid" class="btn btn-success"><i class="far fa-hand-pointer mr-1"></i> Grabar</button>
+                        </div>
+                        <div class="col-6 text-right" *ngIf="item.tienda_id">
+                            <button (click)="cerrar()" [disabled]="frmCategoria.invalid" class="btn btn-danger"><i class="fas fa-times-circle mr-1"></i> Clausurar</button>
+                        </div>
+                    </div>
+                </ng-template>
+            </li>
+            <li [ngbNavItem]="2" *ngIf="item.tienda_id">
+                <a ngbNavLink><i class="fas fa-cart-arrow-down"></i> Mis Productos</a>
+                <ng-template ngbNavContent>
+                    <div class="row">
+                        <div class="col">
+                            <button type="button" (click)="productoNuevoModal(modalProducto)" style="width: 100%;" class="btn btn-success btn-lg mb-3"><i class="fas fa-cart-plus"></i> Agregar producto</button>
+                        </div>
+                        <div class="col">
+                            <a class="btn btn-info btn-lg mb-3" target="_blank" [routerLink]="'/Store/'+item.tienda_id" style="width: 100%;"><i class="fa-shopping-basket"></i> Registrar pedido</a>
+                        </div>
+                    </div>
+                    <oh-filterTab [save]="'des_product_store_list'" [(filter)]="filter" [template]="filterWindow" [length]="tienda_productos.length" [obj_pagin]="pagin" (list)="destiendaProductoListar()"></oh-filterTab>
+                    <table class="table table-bordered" width="100%" cellspacing="0" style="width: 100%;">
+                        <thead>
+                            <tr role="row">
+                                <th scope="col" style="width:1rem">
+                                  <i title="Editar" class="text-muted text-size-10 fas fas fa-edit"></i>
+                                </th>
+                                <th scope="col" style="width:1rem">
+                                  <i title="Opciones" class="text-muted text-size-10 fas fa-sliders-h"></i>
+                                </th>
+                                <th scope="col" style="width:1rem">
+                                  <i title="Borrar" class="text-muted text-size-10 fas fa-trash-alt"></i>
+                                </th>
+                                <th>Producto</th>
+                                <th>SKU</th>
+                                <th>Precio</th>
+                                <th>Stock/Pedido</th>
+                                <th>Ultima compra</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let producto of tienda_productos; let i = index">
+                                <td>
+                                  <a class="text-size-10 text-success" href="#" (click)="$event.preventDefault(); productoEditar(producto.tienda_producto_id, modalProducto)">
+                                    <i class="fas fas fa-edit"></i>
+                                  </a>
+                                </td>
+                                <td>
+                                  <a class="text-size-10 text-info" href="#" (click)="$event.preventDefault(); productoVariantes(producto, modalVariantes)">
+                                    <i class="fas fa-sliders-h"></i>
+                                  </a>
+                                </td>
+                                <td>
+                                    <a class="text-size-10 text-danger" href="#" (click)="$event.preventDefault(); productoBorrar(producto.tienda_producto_id)"><i class="fas fa-trash-alt"></i></a>
+                                </td>
+                                <td>
+                                    <img *ngIf="producto.thumbnail_url" src="{{producto.thumbnail_url}}" style="max-width: 6rem;">
+                                    <img *ngIf="!producto.thumbnail_url" [src]="dcs.config.no_image" style="max-width: 6rem;">
+                                    {{producto.nombre}}
+                                </td>
+                                <td class="text-right">{{producto.sku}}</td>
+                                <td class="text-right">{{producto.precio | ohCurrencyFormat: dcs.data.moneda.simbolo : dcs.data.moneda.ICU}}</td>
+
+                                <td class="text-right">
+                                    <span *ngIf="producto.indicador_stock"><span style="font-weight: bold;">{{producto.stock}}</span>/<span *ngIf="producto.stock_usado">{{producto.stock_usado}}</span><span *ngIf="!producto.stock_usado">0</span></span>
+                                </td>
+                                <td class="text-right">
+                                    <span *ngIf="producto.indicador_stock">{{producto.fecha_ultimo_uso | date: cse.config.formatDateTime}}</span>
+                                </td>
+                                <td>
+                                    <span *ngIf="producto.indicador_stock && producto.stock_usado >= producto.stock">
+                                        <span class="badge badge-pill badge-danger"><i class="fas fa-times-circle"></i> Agotado</span>
+                                    </span>
+                                    <span *ngIf="!(producto.indicador_stock && producto.stock_usado >= producto.stock)">
+                                        <span class="badge badge-pill badge-success"><i class="fas fa-thumbs-up"></i> Disponible</span>
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </ng-template>
+            </li>
+            <li [ngbNavItem]="3" *ngIf="item.tienda_id">
+              <a ngbNavLink><i class="fas fa-photo-video"></i> Mis Banners</a>
+              <ng-template ngbNavContent>
+                <div class="row">
+                  <div class="col">
+
+                  </div>
+                </div>
+                <oh-filterTab [save]="'des_banner_list'" [(filter)]="filter_banner" [template]="filterBanner" [length]="tienda_banners.length" [obj_pagin]="pagin_banner" (list)="desbannerList()"></oh-filterTab>
+                <table class="table table-bordered" width="100%" cellspacing="0" style="width: 100%;">
+                  <thead>
+                    <tr role="row">
+                      <th scope="col" style="width:1rem"><i title="Editar" class="text-muted text-size-10 fas fas fa-edit"></i></th>
+                      <th>Alias</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of tienda_banners">
+                      <td>
+
+                        <a class="text-size-10 text-success" href="#" (click)="$event.preventDefault(); bannerEditar(item, modalBanner)">
+                          <i class="fas fas fa-edit"></i>
+                        </a>
+                      </td>
+                      <td>{{item.alias}}</td>
+                      <td>
+                        <span *ngIf="item.active == 1" class="badge badge-pill badge-success">
+                          <span class="mr-1">
+                            <i title="OK" class="fas fa-thumbs-up"></i>
+                          </span>
+                          <span>Activo</span>
+                        </span>
+                        <span *ngIf="item.active == 0" class="badge badge-pill badge-danger">
+                          <span class="mr-1">
+                            <i title="OK" class="fas fa-thumbs-down"></i>
+                          </span>
+                          <span>Inactivo</span>
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </ng-template>
+            </li>
+        </ul>
+    </div>
+    <div [ngbNavOutlet]="nav" class="mt-2"></div>
+</div>
+
+<ng-template #modalHorario let-modal let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <h4 class="modal-title" id="modal-basic-title">Horario de atención</h4>
+      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+        <ngb-alert type="info" [dismissible]="false">Puedes configurar si tu negocio tiene un horario definido.</ngb-alert>
+        <div class="btn-group btn-group-toggle pb-3" ngbRadioGroup name="radioBasic" [(ngModel)]="horario.indicador_horario" (change)="validarHorario()">
+            <label ngbButtonLabel class="btn-primary">
+              <input ngbButton type="radio" [value]="1"> Con horario
+            </label>
+            <label ngbButtonLabel class="btn-primary">
+              <input ngbButton type="radio" [value]="0"> Sin horario
+            </label>
+        </div>
+        <ng-template [ngIf]="horario.indicador_horario == 1">
+            <div class="row" *ngFor="let horario of horario.horarios; let i = index">
+                <div class="col-12">
+                    <button (click)="cambiarHorarioDia(horario)" class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : horario.seleccionado, 'btn-outline-danger' : !horario.seleccionado}"><i class="fas fa-check" *ngIf="horario.seleccionado"></i> <i class="text-danger fas fa-times" *ngIf="!horario.seleccionado"></i> {{horario.nombre}} <span *ngIf="horario.seleccionado">[{{formatHorario(horario.hora_inicio)}}-{{formatHorario(horario.hora_fin)}}]</span></button>
+                </div>
+                <div class="col-6" *ngIf="horario.seleccionado">
+                    <ngb-timepicker [(ngModel)]="horario.hora_inicio" [minuteStep]="30"></ngb-timepicker>
+                </div>
+                <div class="col-6" *ngIf="horario.seleccionado">
+                    <ngb-timepicker [(ngModel)]="horario.hora_fin" [minuteStep]="30"></ngb-timepicker>
+                </div>
+            </div>
+        </ng-template>
+    </div>
+    <div class="modal-footer">
+        <button (click)="d()" class="btn btn-outline-danger mr-2">Cancelar</button>
+      <button (click)="c('guardar')" class="btn btn-success">Guardar</button>
+    </div>
+</ng-template>
+
+<ng-template #modalMedioPago let-modal let-c="close" let-d="dismiss">
+    <div class="modal-header">
+      <h4 class="modal-title" id="modal-basic-title">Medio de pago</h4>
+      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+        <ngb-alert type="info" [dismissible]="false">Puedes configurar los diversos medios de pago que tu negocio tiene.</ngb-alert>
+        <form #frmMedioPago="ngForm" class="form-enable">
+            <div class="row">
+                <!-- SI ACEPTA EFECTIVO -->
+                <div class="col-12">
+                    <button (click)="medio_pago.indicador_efectivo = !medio_pago.indicador_efectivo" class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : medio_pago.indicador_efectivo, 'btn-outline-danger' : !medio_pago.indicador_efectivo}">
+                        <i class="fas fa-check mr-2" *ngIf="medio_pago.indicador_efectivo"></i>
+                        <i class="text-danger fas fa-times mr-2" *ngIf="!medio_pago.indicador_efectivo"></i> <i class="fas fa-money-bill-wave"></i> Efectivo máximo aceptado
+                    </button>
+                </div>
+                <div class="col-12 mb-2" *ngIf="medio_pago.indicador_efectivo">
+                    <input currencyMask #inp_efectivo_maximo="ngModel" name="inp_efectivo_maximo" placeholder="Billete máximo a aceptar" [(ngModel)]="medio_pago.efectivo_maximo" [options]="dcs.data.moneda_format" class="form-control">
+                </div>
+                <!-- SI ACEPTA TARJETA -->
+                <div class="col-12">
+                    <button (click)="pagoTarjetaValidar()" class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : medio_pago.indicador_tarjeta, 'btn-outline-danger' : !medio_pago.indicador_tarjeta}">
+                        <i class="fas fa-check mr-2" *ngIf="medio_pago.indicador_tarjeta"></i>
+                        <i class="text-danger fas fa-times mr-2" *ngIf="!medio_pago.indicador_tarjeta"></i> <i class="far fa-credit-card"></i> Tarjeta
+                    </button>
+                </div>
+                <div class="col-12 mb-2" *ngIf="medio_pago.indicador_tarjeta">
+                    <input type="hidden" name="inp_tarjetas" [(ngModel)]="medio_pago.tarjetas_seleccionadas" [required]="true">
+                    <div style="overflow: auto;">
+                        <div class="btn-group btn-group-toggle">
+                            <label *ngFor="let tarjeta of medio_pago.tarjetas; let i = index" class="btn-outline-primary" ngbButtonLabel (change)="seleccionarTarjeta()">
+                                <input type="checkbox" ngbButton name="tarjeta_{{i}}" [(ngModel)]="tarjeta.seleccionado"> {{tarjeta.nombre}}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <!-- SI ACEPTA TRANSFERENCIA POR BANCO -->
+                <div class="col-12">
+                    <button (click)="pagoBancoValidar()" class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : medio_pago.indicador_transferencia, 'btn-outline-danger' : !medio_pago.indicador_transferencia}">
+                        <i class="fas fa-check mr-2" *ngIf="medio_pago.indicador_transferencia"></i>
+                        <i class="text-danger fas fa-times mr-2" *ngIf="!medio_pago.indicador_transferencia"></i> <i class="fas fa-money-check-alt"></i> Transferencia
+                    </button>
+                </div>
+                <div class="col-12" *ngIf="medio_pago.indicador_transferencia && medio_pago.bancos">
+                    <div class="row pl-2 pt-2" *ngFor="let banco of medio_pago.bancos; let i = index">
+                        <div class="col-12">
+                            <button (click)="banco.seleccionado = !banco.seleccionado" class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : banco.seleccionado, 'btn-outline-danger' : !banco.seleccionado}">
+                                <i class="fas fa-check" *ngIf="banco.seleccionado"></i>
+                                {{banco.nombre}}
+                            </button>
+                        </div>
+                        <div class="col-6" *ngIf="banco.seleccionado">
+                            <div class="form-group">
+                                <label>Cuenta</label>
+                                <input class="form-control" name="inp_banco_cuenta_{{i}}" [(ngModel)]="banco.cuenta" placeholder="Cuenta" type="tel" required="true" maxlength="100">
+                            </div>
+                        </div>
+                        <div class="col-6" *ngIf="banco.seleccionado">
+                            <div class="form-group">
+                                <label>CCI</label>
+                                <input class="form-control" name="inp_banco_cuenta_cci_{{i}}" [(ngModel)]="banco.cuenta_cci" placeholder="Cuenta CCI" type="tel" maxlength="100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- SI ACEPTA TRANSFERENCIA POR BILLETERA -->
+                <div class="col-12">
+                    <button (click)="pagoBilleteraValidar()" class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : medio_pago.indicador_billetera, 'btn-outline-danger' : !medio_pago.indicador_billetera}">
+                        <i class="fas fa-check mr-2" *ngIf="medio_pago.indicador_billetera"></i>
+                        <i class="text-danger fas fa-qrcode mr-2" *ngIf="!medio_pago.indicador_billetera"></i> <i class="fas fa-money-check-alt"></i> Billetera digital
+                    </button>
+                </div>
+                <div class="col-12" *ngIf="medio_pago.indicador_billetera && medio_pago.billeteras">
+                    <div class="row pl-2 pt-2" *ngFor="let billetera of medio_pago.billeteras; let i = index">
+                        <div class="col-12">
+                            <button (click)="billetera.seleccionado = !billetera.seleccionado" class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : billetera.seleccionado, 'btn-outline-danger' : !billetera.seleccionado}">
+                                <i class="fas fa-check" *ngIf="billetera.seleccionado"></i>
+                                {{billetera.nombre}}
+                            </button>
+                        </div>
+                        <div class="col-6" *ngIf="billetera.seleccionado">
+                            <div class="form-group">
+                                <input type="hidden" name="inp_billetera_codigo_{{i}}" [(ngModel)]="billetera.codigo" required="true">
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" name="inp_billetera_pre_codigo_{{i}}" [(ngModel)]="billetera.pre_codigo">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" (click)="pegarQR(billetera)" placement="left" ngbTooltip="Pegar QR" type="button"><i class="fas fa-paste"></i></button>
+                                    </div>
+                                </div>
+                                <button class="btn btn-success w-100 mb-2 text-left" [ohZxingReader]="'qr'" (ohZxingResponse)="billetaQRleer($event, billetera)"><i class="fas fa-qrcode"></i> Leer código QR</button>
+                            </div>
+                        </div>
+                        <div class="col-6" *ngIf="billetera.seleccionado && billetera.codigo">
+                            <qrcode [qrdata]="billetera.codigo" [width]="200" [errorCorrectionLevel]="'M'"></qrcode>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+      <button (click)="d()" class="btn btn-outline-danger mr-2">Cancelar</button>
+      <button (click)="c('guardar')" [disabled]="frmMedioPago.invalid" class="btn btn-success">Guardar</button>
+    </div>
+</ng-template>
+
+<ng-template #modalProducto let-modal>
+    <div class="modal-header">
+      <h4 class="modal-title" id="modal-basic-title">Producto</h4>
+      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+     <form #frmProducto="ngForm" class="form-enable">
+        <div class="form-group row">
+          <label class="col-form-label col-12 col-sm-3">
+            <span>SKU</span>
+          </label>
+          <div class="col-12 col-sm-9">
+            <input #inp_sku="ngModel" name="inp_sku" [(ngModel)]="itemProducto.sku" class="form-control" [required]="true">
+          </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-12 col-sm-3">
+                <span>Nombre</span>
+            </label>
+            <div class="col-12 col-sm-9" *ngIf="item.categoria_indicador_producto">
+                <input type="hidden" name="inp_producto_hidden" [(ngModel)]="itemProducto.producto_hidden" [required]="true">
+                <oh-predictive-text [(value)]="itemProducto.categoria_producto_id" (value_write)="alEscribir($event)" [data]="productos_categoria" [searchBy]="['nombre']" [return]="'categoria_producto_id'" (onChange)="seleccionarCategoriaProducto()" (onClean)="limpiarCategoriaProducto()" [resultTemplate]="resultProducto"></oh-predictive-text>
+                <img *ngIf="url_producto" [src]="url_producto" style="width: 100px" class="mt-2">
+            </div>
+            <div class="col-12 col-sm-9" *ngIf="!item.categoria_indicador_producto">
+                <input type="text" class="form-control" name="inp_producto_nombre" [(ngModel)]="itemProducto.producto_hidden" [required]="true">
+            </div>
+        </div>
+        <div class="form-group row" *ngIf="!itemProducto.categoria_producto_id">
+            <label class="col-form-label col-12 col-sm-3">
+                <span>Foto(s)</span>
+            </label>
+            <div class="col-12 col-sm-9">
+                <oh-imageUpload [fotos]="itemProducto.fotos" [ruta]="dcs.config.ruta_firestore" [config]="configFoto" (eventos)="eventosFotoProductos($event)" [thumbnail]="true"></oh-imageUpload>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-12 col-sm-3">
+                <span>Stock</span>
+            </label>
+            <div class="col-12 col-sm-9">
+                <div class="btn-group btn-group-toggle mb-2" ngbRadioGroup name="inp_indicador_stock" #inp_indicador_stock="ngModel" required="true" [(ngModel)]="itemProducto.indicador_stock">
+                    <label ngbButtonLabel class="btn-outline-primary">
+                        <input ngbButton type="radio" [value]="false"> No Aplicar
+                    </label>
+                    <label ngbButtonLabel class="btn-outline-primary">
+                        <input ngbButton type="radio" [value]="true"> Aplicar
+                    </label>
+                </div>
+                <input type="number" *ngIf="itemProducto.indicador_stock" #inp_stock="ngModel" name="inp_stock" [(ngModel)]="itemProducto.stock" class="form-control">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-form-label col-12 col-sm-3">
+                <span>Precio</span>
+            </label>
+            <div class="col-12 col-sm-9">
+              <input currencyMask #inp_precio="ngModel" name="inp_precio" [(ngModel)]="itemProducto.precio" [options]="dcs.data.moneda_format" class="form-control" [required]="true">
+            </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-12 col-sm-3">
+            <span>Precio Venta (Oferta)</span>
+          </label>
+          <div class="col-12 col-sm-9">
+            <input currencyMask #inp_sale_price="ngModel" name="inp_sale_price" [(ngModel)]="itemProducto.sale_price" [options]="dcs.data.moneda_format" class="form-control" placeholder="Se tomara el precio si se deja vació">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-12 col-sm-3">
+            <span>Fecha de Vencimiento</span>
+          </label>
+          <div class="col-12 col-sm-9">
+            <oh-date type="modal" [(dateValue)]="itemProducto.fecha_vencimiento"></oh-date>
+            <!-- <oh-daterange [(from)]="item.date_start" [(to)]="item.date_end" type="modal"></oh-daterange> -->
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-12 col-sm-3">
+            <span>Desc. Breve</span>
+          </label>
+          <div class="col-12 col-sm-9">
+            <tinymce #inp_short_desc="ngModel" name="inp_short_desc" [(ngModel)]="itemProducto.short_desc" [config]="{}">
+            </tinymce>
+            <div *ngIf="inp_short_desc.invalid && (inp_short_desc.dirty || inp_short_desc.touched)" class="alert-form">
+              <ul>
+                <li *ngIf="inp_short_desc.errors['required']">El campo es requerido.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-12 col-sm-3">
+            <span>Descripción</span>
+          </label>
+          <div class="col-12 col-sm-9">
+            <tinymce #inp_descripcion="ngModel" name="inp_descripcion" [(ngModel)]="itemProducto.descripcion" [config]="{}">
+            </tinymce>
+            <div *ngIf="inp_descripcion.invalid && (inp_descripcion.dirty || inp_descripcion.touched)" class="alert-form">
+              <ul>
+                <li *ngIf="inp_descripcion.errors['required']">El campo es requerido.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-12 col-sm-3">
+            <span>Informción Adicional</span>
+          </label>
+          <div class="col-12 col-sm-9">
+            <tinymce #inp_addtional_info="ngModel" name="inp_addtional_info" [(ngModel)]="itemProducto.addtional_info" [config]="{}">
+            </tinymce>
+            <div *ngIf="inp_addtional_info.invalid && (inp_addtional_info.dirty || inp_addtional_info.touched)" class="alert-form">
+              <ul>
+                <li *ngIf="inp_descripcion.errors['required']">El campo es requerido.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-12 col-sm-3">
+            <span>Venta y Reembolso</span>
+          </label>
+          <div class="col-12 col-sm-9">
+            <tinymce #inp_shipp_returns="ngModel" name="inp_shipp_returns" [(ngModel)]="itemProducto.shipp_returns"
+              [config]="{}">
+            </tinymce>
+            <div *ngIf="inp_shipp_returns.invalid && (inp_shipp_returns.dirty || inp_shipp_returns.touched)"
+              class="alert-form">
+              <ul>
+                <li *ngIf="inp_descripcion.errors['required']">El campo es requerido.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button (click)="productoGrabar(modal)" [disabled]="frmProducto.invalid || foto_cargando" class="btn btn-success">Grabar</button>
+    </div>
+</ng-template>
+
+<ng-template #resultProducto let-r="result" let-t="term">
+    <img *ngIf="r.url" [src]="r.url" class="mr-1" style="width: 50px">
+    <img *ngIf="!r.url" [src]="dcs.config.no_image" class="mr-1" style="width: 50px">
+    <ngb-highlight [result]="r.nombre" [term]="t"></ngb-highlight>
+</ng-template>
+
+<ng-template #filterWindow let-c="close" let-d="dismiss">
+    <div class="modal-header">
+        <span class="h5 m-0"><i class="fa fa-filter mr-1"></i>Filtrar</span>
+        <a href="#" class="close text-dark" aria-label="Close" (click)="$event.preventDefault(); d('Cross click')">
+            <i class="fas fa-times fa-xs"></i>
+            </a>
+    </div>
+    <div class="modal-body">
+        <form>
+            <div class="form-group row">
+                <label class="col-12 col-sm-3 col-form-label">Producto</label>
+                <div class="col-12 col-sm-9">
+                    <input name="documento" class="form-control" ohFocusOnInit [(ngModel)]="filter.field.producto_nombre.value" (keyup.enter)="c('doFilter')" type="text">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-danger" (click)="c('cancel')"><i class="fas fa-times-circle mr-1"></i> Cancelar</button>
+        <button type="submit" class="btn btn-outline-primary" (click)="c('doFilter')"><i class="fas fa-filter mr-1"></i>Filtrar</button>
+    </div>
+</ng-template>
+
+<ng-template #modalBanner let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Banner</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form #frmBanner="ngForm" class="form-enable">
+      <div class="form-group row">
+        <label class="col-form-label col-12 col-sm-3">
+          <span>Alias</span>
+        </label>
+        <div class="col-12 col-sm-9">
+          <input #inp_alias="ngModel" class="form-control" name="inp_alias" [(ngModel)]="itemBanner.alias" type="text" required="true" maxlength="1000">
+          <div *ngIf="inp_alias.invalid && (inp_alias.dirty || inp_alias.touched)" class="alert-form">
+            <ul>
+              <li *ngIf="inp_alias.errors['required']">El campo es requerido.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-form-label col-12 col-sm-3">
+          <span>Title</span>
+        </label>
+        <div class="col-12 col-sm-9">
+          <tinymce #inp_title="ngModel" name="inp_title" [(ngModel)]="itemBanner.title" [config]="{}"></tinymce>
+          <div *ngIf="inp_title.invalid && (inp_title.dirty || inp_title.touched)" class="alert-form">
+            <ul>
+              <li *ngIf="inp_title.errors['required']">El campo es requerido.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-form-label col-12 col-sm-3">
+          <span>Sub-Title</span>
+        </label>
+        <div class="col-12 col-sm-9">
+          <input #inp_subtitle="ngModel" class="form-control" name="inp_subtitle" [(ngModel)]="itemBanner.subtitle" type="text"
+            required="true" maxlength="1000">
+          <div *ngIf="inp_subtitle.invalid && (inp_subtitle.dirty || inp_subtitle.touched)" class="alert-form">
+            <ul>
+              <li *ngIf="inp_subtitle.errors['required']">El campo es requerido.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-form-label col-12 col-sm-3">
+          <span>Link Botón</span>
+        </label>
+        <div class="col-12 col-sm-9">
+          <input #inp_button_link="ngModel" class="form-control" name="inp_button_link" [(ngModel)]="itemBanner.button_link"
+            type="text" required="true" maxlength="1000">
+          <div *ngIf="inp_button_link.invalid && (inp_button_link.dirty || inp_button_link.touched)" class="alert-form">
+            <ul>
+              <li *ngIf="inp_button_link.errors['required']">El campo es requerido.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-form-label col-12 col-sm-3">
+          <span>Texto Botón</span>
+        </label>
+        <div class="col-12 col-sm-9">
+          <input #inp_button_text="ngModel" class="form-control" name="inp_button_text" [(ngModel)]="itemBanner.button_text"
+            type="text" required="true" maxlength="1000">
+          <div *ngIf="inp_button_text.invalid && (inp_button_text.dirty || inp_button_text.touched)" class="alert-form">
+            <ul>
+              <li *ngIf="inp_button_text.errors['required']">El campo es requerido.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-form-label col-12 col-sm-3">
+          <span>Imagen</span>
+        </label>
+        <div class="col-12 col-sm-9">
+          <oh-imageUpload [fotos]="itemBanner.imagen" [ruta]="dcs.config.ruta_firestore" [config]="configFotoBanner" (eventos)="eventoImagenBanner($event)" [thumbnail]="true"></oh-imageUpload>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-form-label col-sm-3">
+          Estado
+        </label>
+        <div class="col-sm-9">
+          <div class="btn-group btn-group-toggle" ngbRadioGroup name="inp_active" #inp_active="ngModel" required="true"
+            [(ngModel)]="itemBanner.active">
+            <label ngbButtonLabel class="btn-outline-success">
+              <input ngbButton type="radio" [value]="true"> Activo
+            </label>
+            <label ngbButtonLabel class="btn-outline-danger">
+              <input ngbButton type="radio" [value]="false"> Inactivo
+            </label>
+          </div>
+          <div *ngIf="inp_active.invalid && (inp_active.dirty || inp_active.touched)" class="alert alert-danger alert-form">
+            <ul>
+              <li *ngIf="inp_active.errors['required']">El campo es requerido.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button (click)="bannerGrabar(modal)" [disabled]="frmBanner.invalid || foto_cargandoBanner"
+      class="btn btn-success">Grabar</button>
+  </div>
+</ng-template>
+
+<ng-template #filterBanner let-c="close" let-d="dismiss">
+</ng-template>
+<des-help></des-help>
+
+<ng-template #modalVariantes let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Variantes de Producto</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form #frmVariante="ngForm" class="form-enable">
+      <div class="row">
+        <table class="table table-bordered mb-0" width="100%" cellspacing="0" style="width: 100%;">
+          <thead>
+            <tr role="row">
+              <th>Color</th>
+              <th *ngFor="let talla of tallas; let t = index">
+                {{talla.descripcion}}
+              </th>              
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let groupVariant of itemsVariantes; let gv = index">
+                <th>
+                  {{groupVariant[0].catalogo_colour}}
+                </th>
+                <ng-template ngFor let-variant let-v="index" [ngForOf]="groupVariant">
+                  <th ngClass="{{(variant.indicador_stock && variant.stock) || variant.sale_price ?  'border-success': 'border-warning'}}">
+                      <div class="form-group row">
+                        <div class="col-12 col-sm-9">
+                          <!-- <div class="input-group input-group-sm">
+                            <input type="number" name="inp_stock{{gv}}{{v}}" id="inp_stock{{gv}}{{v}}" [(ngModel)]="variant.stock" class="form-control form-control-sm" placeholder="Stock" [disabled]="!variant.indicador_stock">
+                            <div class="input-group-append">
+                              <input class="form-check-input mt-0" type="checkbox" aria-label="Aplicar Stock" name="inp_indicador_stock{{gv}}{{v}}" id="inp_indicador_stock{{gv}}{{v}}" [(ngModel)]="variant.indicador_stock">
+                            </div>
+                          </div> -->
+                          <div class="input-group input-group-sm">
+                            <span class="input-group-text">
+                              <input class="form-check-input mt-0" type="checkbox" aria-label="Aplicar Stock" name="inp_indicador_stock{{gv}}{{v}}" id="inp_indicador_stock{{gv}}{{v}}" [(ngModel)]="variant.indicador_stock">
+                            </span>
+                            <input type="number" name="inp_stock{{gv}}{{v}}" id="inp_stock{{gv}}{{v}}" [(ngModel)]="variant.stock" class="form-control form-control-sm" placeholder="Stock" [disabled]="!variant.indicador_stock">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="form-group row">
+                        <div class="col-12">
+                          <input currencyMask name="inp_sale_price{{gv}}{{v}}"  id="inp_sale_price{{gv}}{{v}}" [(ngModel)]="variant.sale_price" [options]="dcs.data.moneda_format" class="form-control form-control-sm" placeholder="S/.0.00">
+                        </div>
+                      </div>
+                  </th>
+                </ng-template>
+            </tr>
+            <tr>
+              <th [attr.colspan]="1 + tallas.length">
+                <div class="input-group input-group-sm">
+                  <oh-predictive-text [form]="frmVariante" [name]="'color_add'" [(value)]="item.color_add" [data]="coloresDisponibes" [searchBy]="['descripcion']" [openOnClick]="true" [disabled]="!(coloresDisponibes.length > 0)"></oh-predictive-text>
+                  <div class="input-group-append">
+                    <button (click)="agregarColor()" [disabled]="!(coloresDisponibes.length > 0) || !item.color_add" class="btn btn-success">Agregar</button>
+                  </div>
+                </div>
+              </th>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th [attr.colspan]="1 + tallas.length">
+                *De no colocar precio se tomara el precio del producto base por defecto
+              </th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button (click)="modal.dismiss('Cross click')" class="btn btn-danger">Cancelar</button>
+    <button (click)="varianteGrabar(modal)" [disabled]="frmVariante.invalid" class="btn btn-success">Grabar</button>
+  </div>
+</ng-template>

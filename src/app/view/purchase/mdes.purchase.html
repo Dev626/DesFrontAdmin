@@ -1,0 +1,76 @@
+<div id="ovnContent" class="ind-body-maxContent">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-xl-10 col-lg-12 col-md-9">
+                <div class="card o-hidden border-0 shadow-lg my-2" *ngIf="config.defecto">
+                    <mdes-nav [sistema_base]="cse.data.system" [config]="config" [doLogoutEvent]="doLogoutEvent" (onLoginEvent)="onLoginoutEvent()" (onLogoutEvent)="onLoginoutEvent()" (onCountryChange)="countryChange($event)"></mdes-nav>
+                    <div class="card-body p-0">
+                        <div class="card shadow">
+                            <div class="card-header py-2">
+                                <div class="row">
+                                    <div class="col-12 col-md-6 pb-2">
+                                        <mdes-storeheader [config]="config" [tienda]="tienda" [medio_pago]="medio_pago" [horarios]="horarios"></mdes-storeheader>
+                                    </div>
+                                    <div class="col-12 col-md-6 text-right">
+                                        <a href="https://wa.me/{{config.defecto.prefijo_telefono+tienda.telefono}}?text={{config.whatsapp_consultar}}" target="_blank" class="btn btn-success mr-1" ngbTooltip="Consultar al vendedor por Whatsapp"><i class="fab fa-whatsapp"></i></a>
+                                        <a href="https://wa.me/?text={{whatsapp_compartirtienda_url}}" target="_blank" class="btn btn-success mr-1" ngbTooltip="Compartir tienda por Whatsapp"><i class="fas fa-share-alt"></i></a>
+                                        <button *ngIf="cse.data.user && !es_tienda_favorita" (click)="destiendaFavoritaRegistrar()" class="btn btn-info mr-1" ngbTooltip="Agregar tienda en favoritos"><i class="fas fa-plus"></i>&nbsp;<span class="d-none d-sm-inline">Favoritos</span></button>
+                                        <button *ngIf="cse.data.user && es_tienda_favorita" (click)="destiendaFavoritaEliminar()" class="btn btn-success mr-1" ngbTooltip="Quitar tienda de favoritos"><i class="fas fa-check"></i>&nbsp;<span class="d-none d-sm-inline">Favorito</span></button>
+                                        <dsh-seller-map-location [tienda]="tienda" [config]="config" class="mr-1"></dsh-seller-map-location>
+                                        <button (click)="marcarTienda()" [routerLink]="['/Cart']" class="btn btn-primary" [disabled]="carrito.length == 0" ngbTooltip="Ver carrito de la tienda"><i class="fas fa-cart-plus"></i> Carrito ({{carrito.length}})</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="input-group mb-3">
+                                    <input type="text" [(ngModel)]="producto_buscar" class="form-control" placeholder="Ingrese el producto a buscar" (keyup.enter)="buscarProductos()">
+                                    <span class="input-group-text" ngbTooltip="Mostrando {{productos.length}} de {{pagin.total}} productos">{{productos.length}}/<b>{{pagin.total}}</b></span>
+                                    <button class="btn btn-success" type="button" (click)="buscarProductos()"><i class="fas fa-search"></i> Buscar</button>
+                                    <button class="btn btn-outline-danger" type="button" (click)="limpiarProductos()"><i class="fas fa-eraser"></i></button>
+                                </div>
+                                <div class="row row-cols-1 row-cols-md-3 storeZoom">
+                                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-4" *ngFor="let producto of productos; let i = index">
+                                        <div class="card h-100 producto">
+                                            <a href="#" [routerLink]="['Product', producto.tienda_producto_id]">
+                                                <div style="position: absolute; background-color: white;" class="text-bold">#{{producto.tienda_producto_id}}</div>
+                                                <div style="height: 180px;text-align: center;" class="mt-2">
+                                                    <img *ngIf="producto.url" src="{{producto.url}}" style="max-height: 180px; max-width: 95%;">
+                                                    <img *ngIf="!producto.url" [src]="config.url_noImage" style="max-height: 180px; max-width: 95%;">
+                                                </div>
+                                            </a>
+                                            <div class="card-body" style="position: relative;">
+                                                <a href="#" [routerLink]="['Product', producto.tienda_producto_id]">
+                                                    <h5 class="text-bold" style="height: 98px; overflow: hidden;" [ngbTooltip]="producto.producto_nombre">{{producto.producto_nombre}}</h5>
+                                                </a>
+                                                <div class="mb-3" style="position: relative; ">
+                                                    <p class="card-text text-left text-bold" *ngIf="producto.indicador_stock == '1'" ngbTooltip="Stock" style="position: absolute; background-color: #1cc88a; color: #ffffff; padding: 4px; top: -5px;">{{producto.stock_disponible}}</p>
+                                                    <p class="card-text text-right text-bold">{{producto.precio | ohCurrencyFormat: config.moneda_defecto.simbolo : config.moneda_defecto.ICU}}</p>
+                                                </div>
+                                                <span *ngIf="producto.indicador_stock == '0' || (producto.indicador_stock == '1' && producto.stock_disponible > 0)">
+                                                    <button class="btn btn-primary" *ngIf="!producto.agregado" ngbTooltip="Agregar" (click)="$event.preventDefault(); carritoAgregar(producto)"><i class="fas fa-shopping-cart"></i> AGREGAR</button>
+                                                    <button class="btn btn-primary" *ngIf="producto.agregado" ngbTooltip="Quitar" (click)="$event.preventDefault(); carritoAgregar(producto)"><i class="fas fa-check"></i> AGREGADO</button>
+                                                </span>
+                                                <span *ngIf="producto.indicador_stock == '1' && producto.stock_disponible == 0">
+                                                    <button [disabled]="true" class="btn btn-primary">AGOTADO</button>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card" *ngIf="productos_cargando">
+                                    <div class="card-body">
+                                        <i class="fas fa-spinner fa-spin"></i> Cargando productos...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row text-center pt-2 pb-2">
+                            <div class="col" style="font-size: 12px;">© Delivery Smart - Powered by <a href="https://ovenfo.com/" target="_blank">Ovenfo</a></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<dsh-help [config]="config"></dsh-help>

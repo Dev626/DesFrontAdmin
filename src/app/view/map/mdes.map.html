@@ -1,0 +1,153 @@
+<div id="ovnContent" class="ind-body-maxContent">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-xl-10 col-lg-12 col-md-9" *ngIf="config.defecto">
+                <div class="card o-hidden border-0 shadow-lg my-2">
+                    <mdes-nav [sistema_base]="cse.data.system" [config]="config" [doLogoutEvent]="doLogoutEvent" (onCountryChange)="countryChange($event)"></mdes-nav>
+                    <div class="card-body p-0">
+                        <div class="oh_mapSearch pt-1 pl-1">
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <button class="btn"
+                                        [ngClass]="{'btn-success' : buscar.gps_habilitado, 'btn-danger' : !buscar.gps_habilitado}"
+                                        (click)="ubicarGPS()" type="button"><i
+                                            class="fas fa-map-marker-alt"></i></button>
+                                    <button class="btn btn-success" (click)="filtrar(modalFiltro)" type="button"><i
+                                            class="fas fa-filter"></i></button>
+                                </div>
+                                <div class="oh_mapInput">
+                                    <oh-predictive-text [(value)]="buscar.filtro.tienda_buscada" placeholder="Buscar tiendas"
+                                    [searchBy]="['nombre']" (onChange)="seleccionarTienda($event)"
+                                    (onSearch)="onBuscarTienda($event)" (onClean)="limpiarBusqueda()"
+                                    [resultTemplate]="resultProducto"></oh-predictive-text>
+                                </div>
+                            </div>
+                        </div>
+                        <!--
+                        <agm-map #agpMap class="map-dir" [styles]="mapStyles" [zoom]="buscar_zoom"
+                            [latitude]="buscar.latitud" [longitude]="buscar.longitud" [usePanning]="true"
+                            (mapClick)="mapaClick($event)">
+                            <agm-marker [latitude]="buscar.latitud" [longitude]="buscar.longitud"
+                                [iconUrl]="buscar.ubicacion_marcador" [animation]="'DROP'">
+                                <agm-info-window #windowInfo [isOpen]="buscar.tienda && (buscar.tienda_seleccionada == buscar.tienda.tienda_id)"
+                                    class="info-window-custom" (infoWindowClose)="cerrarVentana()">
+                                    <div class="row no-gutters" *ngIf="buscar.tienda">
+                                        <div class="d-flex flex-row pb-2">
+                                            <div class="mr-2">
+                                                <div class="card-title text-primary mb-1 h6">
+                                                    <strong><i [class]="buscar.tienda.categoria_icono" class="mr-1"></i> Tienda</strong><br>
+                                                    <span class="font-italic text-muted">{{buscar.tienda.categoria_nombre}}</span>
+                                                </div>
+                                                <div class="card-text">
+
+                                                    <div class="text-center">
+                                                        <img *ngIf="buscar.tienda.empresa_logo_url" [src]="buscar.tienda.empresa_logo_url" style="max-height: 70px; max-width: 100px;">
+                                                        <h4>{{buscar.tienda.nombre}}</h4>
+                                                    </div>
+
+                                                    <a [routerLink]="['../Store', buscar.tienda.tienda_id]" class="btn btn-primary btn-lg btn-block mb-3"><i
+                                                            class="fas fa-store-alt"></i> VISITAR TIENDA</a>
+
+                                                    <div class="input-group mb-3">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">{{config.defecto.prefijo_telefono}}</span>
+                                                        </div>
+                                                        <input type="text" class="form-control" [disabled]="true" value="{{buscar.tienda.telefono}}">
+                                                        <div class="input-group-append">
+                                                            <button class="btn btn-outline-secondary" placement="left" [ohCopyText]="config.defecto.prefijo_telefono+buscar.tienda.telefono" ngbTooltip="Click para copiar el teléfono" type="button"><i class="fas fa-copy"></i></button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="btn-group" role="group" style="width: 100%;">
+                                                        <a href="tel:{{'+'+config.defecto.prefijo_telefono+buscar.tienda.telefono}}" ngbTooltip="Llamar por teléfono"
+                                                            class="btn btn-lg btn-info"><i
+                                                                class="fas fa-phone-alt"></i></a>
+                                                        <a href="https://wa.me/{{config.defecto.prefijo_telefono+buscar.tienda.telefono}}?text={{config.whatsapp_consultar}}" ngbTooltip="Contactar por whatsapp"
+                                                            target="_blank" class="btn btn-lg btn-success"><i
+                                                                class="fab fa-whatsapp"></i></a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </agm-info-window>
+                            </agm-marker>
+                            <agm-marker *ngFor="let tienda of buscar.tiendas; let i = index"
+                                (markerClick)="tiendaSeleccionar(tienda)" [latitude]="tienda.latitud"
+                                [longitude]="tienda.longitud">
+                            </agm-marker>
+                        </agm-map>
+                    -->
+                        <div class="row text-center pt-2 pb-2">
+                            <div class="col" style="font-size: 12px;">© Delivery Smart - Powered by <a href="https://ovenfo.com/" target="_blank">Ovenfo</a></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<dsh-help [config]="config"></dsh-help>
+<ng-template #modalFiltro let-c="close" let-d="dismiss">
+    <div class="modal-header">
+        <h4 class="modal-title">
+            <span>Filtrar búsqueda</span>
+        </h4>
+        <button type="button" class="close" aria-label="Close" (click)="d('cerrar')"><span
+                aria-hidden="true">&times;</span></button>
+    </div>
+    <div class="modal-body">
+        <form #frmFiltro="ngForm" class="form-enable">
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Rango</label>
+                <div class="col-sm-9">
+                    <div class="btn-group btn-group-toggle" ngbRadioGroup name="inp_rango"
+                        [(ngModel)]="buscar.filtrar.distancia">
+                        <label ngbButtonLabel class="btn-outline-primary">
+                            <input ngbButton type="radio" [value]="1"> &lt; 1 km
+                        </label>
+                        <label ngbButtonLabel class="btn-outline-primary">
+                            <input ngbButton type="radio" [value]="3"> &lt; 3 KM
+                        </label>
+                        <label ngbButtonLabel class="btn-outline-primary">
+                            <input ngbButton type="radio" [value]="7"> &lt; 7 KM
+                        </label>
+                        <label ngbButtonLabel class="btn-outline-primary">
+                            <input ngbButton type="radio" [value]="70"> &lt; 70 KM
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Categoría</label>
+                <div class="col-sm-9">
+                    <oh-predictive-text [(value)]="buscar.filtrar.categoria_id" [data]="config.categorias"
+                        placeholder="Seleccionar..." [searchBy]="['nombre']" [return]="'categoria_id'"
+                        [openOnClick]="true"></oh-predictive-text>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-sm-3 col-form-label">Condiciones</label>
+                <div class="col-sm-9">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="inp_indicador_disponible"
+                            name="inp_indicador_disponible" [(ngModel)]="buscar.filtrar.indicador_disponible">
+                        <label class="custom-control-label" for="inp_indicador_disponible">Tiendas abiertas</label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-outline-dark" (click)="c('cancel')"><i class="fa fa-close"></i> Cancelar</button>
+        <button class="btn btn-outline-primary" (click)="c('doFilter')"><i class="fa fa-filter"></i> Filtrar</button>
+    </div>
+</ng-template>
+<ng-template #resultProducto let-r="result" let-t="term">
+    <div style="position: relative;">
+      <ngb-highlight [result]="r.nombre" [term]="t"></ngb-highlight> ({{r.categoria_nombre}})
+      <div style="position: absolute; top: 0.05rem; right: 0;">
+        {{r.distancia}} KM
+      </div>
+    </div>
+  </ng-template>

@@ -1,0 +1,12 @@
+<div *ngIf="enable_search" class="oh_mapSearch">
+    <div class="input-group p-1">
+        <div class="input-group-preppend" *ngIf="enable_map_gps">
+            <button class="btn" [ngClass]="{'btn-success' : gps_habilitado, 'btn-danger' : !gps_habilitado}" type="button" id="inp_search_position" (click)="searchCurrentPosition()"><i class="fas fa-map-marker-alt"></i></button>
+        </div>
+        <input type="text" [(ngModel)]="address" id="inp_address" name="inp_address" #inp_address="ngModel" class="form-control oh_mapShadow" [placeholder]="placeholder" [disabled]="disabled" [required]="required">
+    </div>
+</div>
+<!--
+<agm-map class="oh_mapDir" [ngStyle]="{'height.px': height}" [zoom]="zoom" [latitude]="latitude" [longitude]="longitude" [usePanning]="true" (mapClick)="mapClick($event)">
+    <agm-marker [latitude]="latitude" [longitude]="longitude"></agm-marker>
+</agm-map>-->

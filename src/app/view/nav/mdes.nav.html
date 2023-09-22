@@ -1,0 +1,112 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: #e3f2fd;">
+    <a class="navbar-brand" [routerLink]="['/']">
+        <img *ngIf="cse.data.system.logo_url" src="{{cse.data.system.logo_url}}" style="max-width: 200px; max-height: 50px;" />
+        Delivery Smart
+    </a>
+    <button class="navbar-toggler" type="button" (click)="isMenuCollapsed = !isMenuCollapsed">
+        <img [src]="config.pais.img" class="mr-1" style="max-width: 30px;"><span class="navbar-toggler-icon"></span>
+    </button>
+    <div [ngbCollapse]="isMenuCollapsed" class="collapse navbar-collapse">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item" [ngClass]="{'active' : typeRouter == 'map'}">
+                <a class="nav-link" [ngClass]="{'text-primary' : typeRouter == 'map'}" href="#" [routerLink]="['/']"><i class="fas fa-search"></i> Busqueda</a>
+            </li>
+            <li class="nav-item" [ngClass]="{'active' : typeRouter == 'cart'}">
+                <a class="nav-link" [ngClass]="{'text-primary' : typeRouter == 'cart'}" href="#" [routerLink]="['/Cart']"><i class="fas fa-cart-plus"></i> Carrito</a>
+            </li>
+            <li class="nav-item" *ngIf="cse.data.user">
+                <a class="nav-link text-danger" href="#" [routerLink]="['/Be']"><i class="fas fa-shopping-basket"></i> Mis compras</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" (click)="$event.preventDefault(); abrirTutorial()"><i class="fab fa-youtube"></i> Saber más</a>
+            </li>
+            <li class="nav-item">
+                <a target="_blank" href="https://www.facebook.com/Delivery-Smart-110119447476920" class="btn btn-facebook mx-2 my-1" style="width: 42px;" ngbTooltip="Ver canal de Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a target="_blank" href="https://www.youtube.com/channel/UCV1-BRk0Sl_yJyP_M4Bm2PQ" class="btn btn-google mx-2 my-1" style="width: 42px;" ngbTooltip="Ver canal de Youtube"><i class="fab fa-youtube"></i></a>
+            </li>
+            <li class="nav-item d-block d-sm-none dropdown no-arrow" ngbDropdown>
+                <a class="nav-link" href="#" id="userDropdown" ngbDropdownToggle (click)="$event.preventDefault()">
+                    <img [src]="config.pais.img" style="max-width: 30px;"> {{config.pais.nombre}}
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" ngbDropdownMenu>
+                    <a *ngFor="let pais of config.paises; let i = index" class="dropdown-item" href="#" (click)="$event.preventDefault(); cambiarPais(pais)">
+                        <img [src]="pais.img" style="max-width: 30px;"> {{pais.nombre}}
+                    </a>
+                </div>
+            </li>
+            <li class="nav-item d-block d-sm-none" *ngIf="!cse.data.user && mostrarAcceso">
+                <a class="nav-link" href="#" (click)="$event.preventDefault(); abrirModal()"><i class="fas fa-key"></i> Acceder</a>
+            </li>
+            <li class="nav-item d-block d-sm-none bg-gradient-light my-2" *ngIf="cse.data.user">
+                <i class="far fa-user-circle fa-2x ng-star-inserted"></i>
+                <span class="ml-2 text-gray-600 small">{{cse.data.user.data.name}} {{cse.data.user.data.lastName}}</span>
+            </li>
+            <li class="nav-item d-block d-sm-none" *ngIf="cse.data.user">
+                <a class="nav-link" href="#" [routerLink]="['/Be/']">
+                    <i class="fas fa-shopping-basket fa-sm fa-fw mr-2 text-primary"></i> Acceder al portal
+                </a>
+            </li>
+            <li class="nav-item d-block d-sm-none" *ngIf="cse.data.user">
+                <a class="nav-link" href="#" (click)="$event.preventDefault(); onCerrarSession()">
+                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-danger"></i> Cerrar sessión
+                </a>
+            </li>
+        </ul>
+        <li class="nav-item dropdown no-arrow d-none d-sm-block" ngbDropdown>
+            <a class="nav-link" href="#" id="userDropdown" ngbDropdownToggle (click)="$event.preventDefault()">
+                <img [src]="config.pais.img" style="max-width: 30px;"> {{config.pais.nombre}}
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" ngbDropdownMenu>
+                <a *ngFor="let pais of config.paises; let i = index" class="dropdown-item" href="#" (click)="$event.preventDefault(); cambiarPais(pais)">
+                    <img [src]="pais.img" style="max-width: 30px;"> {{pais.nombre}}
+                </a>
+            </div>
+        </li>
+        <li *ngIf="mostrarAcceso" class="nav-item dropdown no-arrow d-none d-sm-block" ngbDropdown>
+            <a class="nav-link" *ngIf="!cse.data.user" href="#" (click)="$event.preventDefault(); abrirModal()"><i class="fas fa-key"></i> Acceder</a>
+            <ng-template [ngIf]="cse.data.user">
+                <a class="nav-link" href="#" id="userDropdown" ngbDropdownToggle (click)="$event.preventDefault()">
+                    <span class="mr-2 d-none d-lg-inline">{{cse.data.user.data.name}} {{cse.data.user.data.lastName}}</span>
+                    <i class="far fa-user-circle fa-2x ng-star-inserted"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" ngbDropdownMenu>
+                    <a class="dropdown-item" href="#" [routerLink]="['/Be/']">
+                        <i class="fas fa-shopping-basket fa-sm fa-fw mr-2 text-primary"></i> Acceder al portal
+                    </a>
+                    <a class="dropdown-item" href="#" (click)="$event.preventDefault(); onCerrarSession()">
+                        <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-danger"></i> Cerrar sessión
+                    </a>
+                </div>
+            </ng-template>
+        </li>
+    </div>
+</nav>
+<ng-template #modalTutorial let-c="close" let-d="dismiss">
+	<div class="modal-header">
+	  <h4 class="modal-title" id="modal-basic-title">Conoce más sobre Delivery Smart</h4>
+	  <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+		<span aria-hidden="true">&times;</span>
+	  </button>
+	</div>
+	<div class="modal-body">
+		<div [innerHTML]="tutorial_url | ohSafeHtml"></div>
+        <a class="btn btn-success" style="width: 100%;" target="_blank" href="{{config.url_landing}}">Conoce nuestros planes y precios</a>
+	</div>
+	<div class="modal-footer">
+        <div class="custom-control custom-checkbox">
+            <input type="checkbox" class="custom-control-input" id="video" name="video" [(ngModel)]="videoOcultar">
+            <label class="custom-control-label" for="video">Ocultar video</label>
+        </div>
+	</div>
+</ng-template>
+<ng-template #modalAcceder let-c="close" let-d="dismiss">
+	<div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">Acceder a Delivery Smart</h4>
+        <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <mdes-login (onLogin)="onLogin(c)" [config]="config"></mdes-login>
+      </div>
+</ng-template>

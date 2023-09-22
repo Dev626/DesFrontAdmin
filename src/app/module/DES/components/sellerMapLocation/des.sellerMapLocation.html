@@ -1,0 +1,18 @@
+<button (click)="$event.preventDefault(); $event.stopPropagation(); verMapa(modalMapa)" class="btn btn-info mr-1"><i class="fas fa-map-marked-alt"></i></button>
+<ng-template #modalMapa let-c="close" let-d="dismiss">
+    <div class="modal-header">
+        <span class="h6 m-0">
+            <span class="text-bold"><i [class]="tienda.categoria_icono"></i> {{tienda.nombre}}</span><br>
+            <a href="tel:{{'+'+dcs.data.un_config_format.prefijo_telefono+tienda.telefono}}">{{dcs.data.un_config_format.prefijo_telefono}} {{tienda.telefono}}</a> - {{tienda.direccion}}
+        </span>
+        <a href="#" class="close text-dark" aria-label="Close" (click)="$event.preventDefault(); c('close')">
+            <i class="fas fa-times fa-xs"></i>
+        </a>
+    </div>
+    <div style="height: 20rem;">
+        <!--
+        <agm-map class="map-dir" [zoom]="17" [latitude]="tienda.latitud" [longitude]="tienda.longitud" [usePanning]="true">
+            <agm-marker [latitude]="tienda.latitud" [longitude]="tienda.longitud"></agm-marker>
+        </agm-map>-->
+    </div>
+</ng-template>

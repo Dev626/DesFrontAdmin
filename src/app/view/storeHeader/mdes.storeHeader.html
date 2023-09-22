@@ -1,0 +1,126 @@
+<div style="display: inline-flex;">
+    <img *ngIf="tienda.empresa_logo_url" [src]="tienda.empresa_logo_url" style="max-height: 70px; max-width: 100px;">
+    <h6 class="m-0 font-weight-bold pt-2 pl-1">
+        <a href="#" [routerLink]="['/Store/'+tienda.tienda_id]">
+            <span class="text-primary">Tienda #{{tienda.tienda_id}}</span><br>
+            <i [class]="tienda.categoria_icono"></i> {{tienda.nombre}}
+        </a>
+        <span *ngIf="!tienda.indicador_horario" class="badge badge-pill badge-success mr-1" ngbTooltip="La atención es en cualquier hora"><i class="fas fa-door-open"></i> Disponible!</span>
+        <a href="#" *ngIf="tienda.indicador_horario && tienda.indicador_abierto" (click)="$event.preventDefault(); verHorario(modalHorario)" ngbTooltip="La tienda se encuentra abierta"><span class="badge badge-pill badge-success mr-1"><i class="fas fa-door-open"></i> Abierto!</span></a>
+        <a href="#" *ngIf="tienda.indicador_horario && !tienda.indicador_abierto" (click)="$event.preventDefault(); verHorario(modalHorario)" ngbTooltip="La tienda se encuentra cerrada"><span class="badge badge-pill badge-warning mr-1"><i class="fas fa-door-closed"></i> Cerrado!</span></a>
+        <a href="#" *ngIf="medio_pago && (medio_pago.indicador_efectivo || medio_pago.indicador_tarjeta || medio_pago.indicador_transferencia || medio_pago.indicador_billetera)" ngbTooltip="Medios de pago" (click)="$event.preventDefault(); verMedioPago(modalMedios)">
+            <span class="badge badge-pill badge-success"><i class="fas fa-comment-dollar"></i>&nbsp;<span class="d-inline d-sm-none">Pago</span> <span class="d-none d-sm-inline">Medios de pago</span></span></a>
+    </h6>
+</div>
+<ng-template #modalHorario let-c="close" let-d="dismiss">
+    <div class="modal-header">
+        <h4 class="modal-title">
+            <span>Horarios</span>
+        </h4>
+        <button type="button" class="close" aria-label="Close" (click)="d('cerrar')"><span
+                aria-hidden="true">&times;</span></button>
+    </div>
+    <div class="modal-body">
+        <div class="row" *ngFor="let horario of horarios; let i = index">
+            <div class="col-12">
+                <button class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : horario.seleccionado, 'btn-outline-danger' : !horario.seleccionado}"><i class="fas fa-check" *ngIf="horario.seleccionado"></i> <i class="text-danger fas fa-times" *ngIf="!horario.seleccionado"></i> {{horario.nombre}} <span *ngIf="horario.seleccionado">[{{formatHorario(horario.hora_inicio)}}-{{formatHorario(horario.hora_fin)}}]</span></button>
+            </div>
+        </div>
+    </div>
+</ng-template>
+<ng-template #modalMedios let-c="close" let-d="dismiss">
+    <div class="modal-header">
+        <h4 class="modal-title">
+            <span>Medios de pago</span>
+        </h4>
+        <button type="button" class="close" aria-label="Close" (click)="d('cerrar')"><span
+                aria-hidden="true">&times;</span></button>
+    </div>
+    <div class="modal-body">
+        <div class="row">
+            <!-- SI ACEPTA EFECTIVO -->
+            <div class="col-12">
+                <button class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : medio_pago.indicador_efectivo, 'btn-outline-danger' : !medio_pago.indicador_efectivo}">
+                    <i class="fas fa-check mr-2" *ngIf="medio_pago.indicador_efectivo"></i> 
+                    <i class="text-danger fas fa-times mr-2" *ngIf="!medio_pago.indicador_efectivo"></i> <i class="fas fa-money-bill-wave"></i> Efectivo máximo aceptado 
+                </button>
+            </div>
+            <div class="col-12 mb-2" *ngIf="medio_pago.indicador_efectivo">
+                <input currencyMask [disabled]="true" #inp_efectivo_maximo="ngModel" name="inp_efectivo_maximo" [(ngModel)]="medio_pago.efectivo_maximo" [options]="config.moneda_defecto_format" class="form-control">
+            </div>
+            <!-- SI ACEPTA TARJETA -->
+            <div class="col-12">
+                <button class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : medio_pago.indicador_tarjeta, 'btn-outline-danger' : !medio_pago.indicador_tarjeta}">
+                    <i class="fas fa-check mr-2" *ngIf="medio_pago.indicador_tarjeta"></i> 
+                    <i class="text-danger fas fa-times mr-2" *ngIf="!medio_pago.indicador_tarjeta"></i> <i class="far fa-credit-card"></i> Tarjeta
+                </button>
+            </div>
+            <div class="col-12 mb-2" *ngIf="medio_pago.indicador_tarjeta">
+                <div class="btn-group btn-group-toggle">
+                    <label *ngFor="let tarjeta of medio_pago.tarjetas; let i = index" class="btn-outline-primary" ngbButtonLabel>
+                        <input type="checkbox" ngbButton name="tarjeta_{{i}}" [(ngModel)]="tarjeta.tarjeta_id" checked  [disabled]="true"> {{tarjeta.nombre}}
+                    </label>
+                </div>
+            </div>
+            <!-- SI ACEPTA TRANSFERENCIA POR BANCO -->
+            <div class="col-12">
+                <button class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : medio_pago.indicador_transferencia, 'btn-outline-danger' : !medio_pago.indicador_transferencia}">
+                    <i class="fas fa-check mr-2" *ngIf="medio_pago.indicador_transferencia"></i> 
+                    <i class="text-danger fas fa-times mr-2" *ngIf="!medio_pago.indicador_transferencia"></i> <i class="fas fa-money-check-alt"></i> Transferencia
+                </button>
+            </div>
+            <div class="col-12" *ngIf="medio_pago.indicador_transferencia && medio_pago.bancos">
+                <div class="row pl-2 pt-2" *ngFor="let banco of medio_pago.bancos; let i = index">
+                    <div class="col-12">
+                        <button class="btn w-100 mb-2 text-left btn-success">
+                            <i class="fas fa-check"></i> 
+                            {{banco.nombre}}
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Cuenta</label>
+                            <div class="input-group mb-3">
+                                <input class="form-control" name="inp_banco_cuenta_{{i}}" [(ngModel)]="banco.cuenta" [disabled]="true">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" placement="left" [ohCopyText]="banco.cuenta" ngbTooltip="Click para copiar el nro de cuenta" type="button"><i class="fas fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>CCI</label>
+                            <div class="input-group mb-3">
+                                <input class="form-control" name="inp_banco_cuenta_cci_{{i}}" [(ngModel)]="banco.cuenta_cci"  [disabled]="true">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" placement="left" [ohCopyText]="banco.cuenta_cci" ngbTooltip="Click para copiar el CCI de cuenta" type="button"><i class="fas fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- SI ACEPTA TRANSFERENCIA POR BILLETERA -->
+            <div class="col-12">
+                <button class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : medio_pago.indicador_billetera, 'btn-outline-danger' : !medio_pago.indicador_billetera}">
+                    <i class="fas fa-check mr-2" *ngIf="medio_pago.indicador_billetera"></i> 
+                    <i class="text-danger fas fa-times mr-2" *ngIf="!medio_pago.indicador_billetera"></i> <i class="fas fa-money-check-alt"></i> Billetera digital
+                </button>
+            </div>
+            <div class="col-12" *ngIf="medio_pago.indicador_billetera && medio_pago.billeteras">
+                <div class="row pl-2 pt-2" *ngFor="let billetera of medio_pago.billeteras; let i = index">
+                    <div class="col-12">
+                        <button class="btn w-100 mb-2 text-left btn-success">
+                            <i class="fas fa-check"></i> 
+                            {{billetera.nombre}}
+                        </button>
+                    </div>
+                    <div class="col-12">
+                        <qrcode [qrdata]="billetera.codigo" [width]="200" [errorCorrectionLevel]="'M'"></qrcode>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</ng-template>

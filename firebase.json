@@ -1,0 +1,32 @@
+{
+  "hosting": {
+    "site": "ovndes",
+    "public": "dist/ovnappDES",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [ 
+      {
+        "source": "/ovnMain/**",
+        "run": {
+          "serviceId" : "ovnmain",
+          "region": "us-central1"
+        }
+      },{
+        "source": "/ovnADM/**",
+        "run": {
+          "serviceId" : "ovnadm",
+          "region": "us-central1"
+        }
+      },{
+        "source": "/ovnDES/**",
+        "run": {
+          "serviceId" : "ovndes",
+          "region": "us-central1"
+        }
+      }
+    ]
+  }
+}

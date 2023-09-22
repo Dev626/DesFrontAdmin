@@ -1,0 +1,655 @@
+<div id="ovnContent" class="ind-body-maxContent">
+    <div class="container-fluid">
+        <div class="row justify-content-center mx-0">
+            <div class="col-xl-10 col-lg-12 col-md-9 px-0">
+                <div class="card o-hidden border-0 shadow-lg my-2" *ngIf="config.defecto">
+                    <mdes-nav #desNav [sistema_base]="cse.data.system" [config]="config" [doLogoutEvent]="doLogoutEvent" (onLoginEvent)="onLoginoutEvent()" (onLogoutEvent)="onLoginoutEvent()" (onCountryChange)="countryChange($event)"></mdes-nav>
+                    <div class="card-body p-0">
+                        <ngb-alert [dismissible]="false" class="mt-2 mx-2" *ngIf="!tienda.tienda_id">
+                            Todavia no has agregado ningun producto en el carrito, busca una tienda cerca para empezar a comprar !
+                            <a href="#" [routerLink]="['/']">Ver tiendas</a>
+                        </ngb-alert>
+                        <div class="card shadow" *ngIf="tienda.tienda_id">
+                            <div class="card-header py-2">
+                                <div class="row">
+                                    <div class="col-12 col-md-6 pt-2">
+                                        <mdes-storeheader [config]="config" [tienda]="tienda" [medio_pago]="medio_pago" [horarios]="horarios"></mdes-storeheader>
+                                    </div>
+                                    <div class="col-12 col-md-6 text-right">
+                                        <a href="https://wa.me/{{config.defecto.prefijo_telefono+tienda.telefono}}?text={{config.whatsapp_consultar}}" ngbTooltip="Consultar al vendedor por Whatsapp" target="_blank" class="btn btn-success mr-1"><i class="fab fa-whatsapp"></i></a>
+                                        <dsh-seller-map-location [tienda]="tienda" [config]="config" class="mr-1"></dsh-seller-map-location>
+                                        <button [routerLink]="['../Store/', tienda.tienda_id]" class="btn btn-primary" ngbTooltip="Retornar a la tienda"><i class="fas fa-cart-plus"></i> Volve a la tienda</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body px-0 pb-1">
+                                <form #frmProducto="ngForm" class="form-enable">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr role="row">
+                                                    <th class="text-right" style="min-width: 7.5rem;">Sub total</th>
+                                                    <th style="min-width: 14rem;">Producto</th>
+                                                    <th class="text-right">Stock</th>
+                                                    <th class="text-right" style="min-width: 7rem;">Precio U.</th>
+                                                    <th class="text-right" style="min-width: 7rem; width: 7.5rem;">Cantidad</th>
+                                                    <th scope="col" style="width:1rem"><i title="Borrar" class="text-muted text-size-10 fas fa-trash-alt"></i></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let producto of carrito; let i = index">
+                                                    <td class="text-right text-bold">{{producto.sub_total | ohCurrencyFormat:  config.moneda_defecto.simbolo : config.moneda_defecto.ICU}}</td>
+                                                    <td>
+                                                        <a href="#" [routerLink]="['/Store/'+tienda.tienda_id+'/Product', producto.tienda_producto_id]" class="text-bold" style="display: inline-flex;">
+                                                            <div style="position: absolute; background-color: white;" class="text-bold">#{{producto.tienda_producto_id}}</div>
+                                                            <img *ngIf="producto.url" src="{{producto.url}}" class="mr-1" style="max-width: 6rem;">
+                                                            <img *ngIf="!producto.url" [src]="config.url_noImage" class="mr-1" style="max-width: 6rem;">
+                                                            {{producto.producto_nombre}}
+                                                        </a>
+                                                    </td>
+                                                    <td class="text-right text-bold">
+                                                        <div *ngIf="producto.indicador_stock == '1'">{{producto.stock_disponible}}</div>
+                                                    </td>
+                                                    <td class="text-right text-bold">{{producto.precio | ohCurrencyFormat:  config.moneda_defecto.simbolo : config.moneda_defecto.ICU}}</td>
+                                                    <td class="text-right">
+                                                        <input #inp_cantidad="ngModel" class="form-control" name="inp_{{i}}_cantidad" [(ngModel)]="producto.cantidad" (change)="calcularTotal()" (keyup)="calcularTotal()"  type="number" [max]="(producto.indicador_stock == '1')?producto.stock_disponible:999" [min]="1" required="true">
+                                                    </td>
+                                                    <td>
+                                                        <a class="text-size-10 text-danger" href="#" (click)="$event.preventDefault(); productoBorrar(producto.tienda_producto_id)"><i class="fas fa-trash-alt"></i></a>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="1" class="text-right text-bold">{{total | ohCurrencyFormat:  config.moneda_defecto.simbolo : config.moneda_defecto.ICU}}</td>
+                                                    <td colspan="6" class="text-bold">Monto total</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="card-footer">
+                                <button (click)="pedirModal(desNav)" [disabled]="frmProducto.invalid" class="btn btn-success mr-1"><i class="fas fa-hands-helping"></i> Pedir</button>
+                                <button (click)="pedidoCancelar()" class="btn btn-outline-danger mr-1"><i class="fas fa-times-circle"></i> Cancelar Pedido</button>
+                            </div>
+                        </div>
+                        <div class="row text-center pt-2 pb-2">
+                            <div class="col" style="font-size: 12px;">© Delivery Smart - Powered by <a href="https://ovenfo.com/" target="_blank">Ovenfo</a></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<dsh-help [config]="config"></dsh-help>
+<ng-template #modalLugarMetodo let-c="close" let-d="dismiss">
+    <div class="modal-header">
+        <span class="h6 m-0"><i class="fas fa-paper-plane"></i> Forma de entrega y confirmación</span>
+        <a href="#" class="close text-dark" aria-label="Close" (click)="$event.preventDefault(); c('close')">
+            <i class="fas fa-times fa-xs"></i>
+        </a>
+    </div>
+    <div class="modal-body">
+        <form #frmConfirm="ngForm" class="form-enable">
+            <ul ngbNav #navConfirmacion="ngbNav" [(activeId)]="navActivo" class="nav-tabs">
+                <li [ngbNavItem]="1" ngbNavItem>
+                <a ngbNavLink><i class="fas fa-file-alt"></i> <span class="d-inline d-sm-none">&nbsp;Entrega</span> <span class="d-none d-sm-inline">&nbsp;Lugar de entrega y método de pago</span></a>
+                <ng-template ngbNavContent>
+
+                    <div *ngIf="tienda.pedido_local" class="row">
+                        <div class="form-group col-12">
+                            <label class="col-form-label text-bold">Buscar cliente por celular</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">{{config.defecto.prefijo_telefono}}</span>
+                                </div>
+                                <input type="tel" name="inp_usuario_telefono" [disabled]="pedido_encontro" [(ngModel)]="pedido.usuario_telefono" placeholder="Ingrese celular" (keyup.enter)="desusuarioDireccionListar()" class="form-control">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" *ngIf="!pedido_encontro" (click)="desusuarioDireccionListar()" ngbTooltip="Click para buscar por celular" [disabled]="!pedido.usuario_telefono || pedido.usuario_telefono.length == 0" type="button"><i class="fas fa-search"></i></button>
+                                    <button class="btn btn-danger" *ngIf="pedido_encontro" (click)="usuarioDireccionLimpiar()" ngbTooltip="Click para volver a buscar" type="button"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </div>
+                            <div class="my-2" *ngIf="pedido_mensaje">
+                                <ngb-alert [dismissible]="false">
+                                    No se encontró al cliente, puede registrar uno nuevo
+                                </ngb-alert>
+                            </div>
+                        </div>
+                        <div class="form-group form-enable col-6">
+                            <label class="col-form-label text-bold">Nombre</label>
+                            <div>
+                                <input class="form-control" name="inp_usuario_nombres" [disabled]="pedido_encontro" [(ngModel)]="pedido.usuario_nombres" type="text" required="true" maxlength="100">
+                            </div>
+                        </div>
+                        <div class="form-group col-6">
+                            <label class="col-form-label text-bold">Apellido</label>
+                            <div>
+                                <input class="form-control" name="inp_usuario_apellido_paterno" [disabled]="pedido_encontro" [(ngModel)]="pedido.usuario_apellido_paterno" type="text" maxlength="100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="col-form-label text-bold">Seleccione forma de despacho</label>
+                            <ul ngbNav #navTipoEntrega="ngbNav" [(activeId)]="pedido.tipo_entrega" class="nav-tabs nav-pills mt-2">
+                                <li [ngbNavItem]="1">
+                                <a ngbNavLink><i class="fas fa-paper-plane"></i> <span class="d-inline d-sm-none">&nbsp;Entrega</span> <span class="d-none d-sm-inline">&nbsp;Entrega a domicilio</span></a>
+                                <ng-template ngbNavContent>
+            
+                                    <div class="form-group row" *ngIf="!tienda.pedido_local || (tienda.pedido_local && pedido.usuario_id)">
+                                        <label class="col-form-label col-12 col-lg-4 text-bold">Seleccione su lugar de entrega</label>
+                                        <div class="col-12 col-lg-8">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered mb-1">
+                                                    <thead>
+                                                        <tr role="row">
+                                                            <th style="width: 30px;">
+                                                                <div class="custom-control custom-radio">
+                                                                    <input type="radio" id="direccion_seleccionada" name="direccion_seleccionada" class="custom-control-input" [disabled]="true">
+                                                                    <label class="custom-control-label"  for="direccion_seleccionada">&nbsp;</label>
+                                                                </div>
+                                                            </th>
+                                                            <th>Lugar</th>
+                                                            <th style="width: 7rem;">Teléfono</th>
+                                                            <th style="width: 20px;">
+                                                                <i title="Editar" class="text-muted text-size-10 fas fas fa-edit"></i>
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr *ngFor="let direccion of usuario_direcciones; let i = index">
+                                                            <td class="text-right text-bold">
+                                                                <div class="custom-control custom-radio">
+                                                                    <input type="radio" id="direccion_seleccionada_{{i}}" name="direccion_seleccionada" class="custom-control-input" [value]="direccion.usuario_direccion_id" [(ngModel)]="pedido.usuario_direccion_id" [required]="true">
+                                                                    <label class="custom-control-label"  for="direccion_seleccionada_{{i}}">&nbsp;</label>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                {{direccion.direccion}}
+                                                            </td>
+                                                            <td>
+                                                                {{direccion.telefono}}
+                                                            </td>
+                                                            <td>
+                                                                <a class="text-size-10 text-success" href="#" (click)="$event.preventDefault(); direccionEditar(direccion)"><i class="fas fas fa-edit"></i></a>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                                <button [disabled]="!direcciones_cargadas" class="btn btn-success" (click)="$event.preventDefault(); direccionNueva()"><i class="fas fa-plus-square"></i> Agregar dirección</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row" *ngIf="tienda.pedido_local && !pedido.usuario_id">
+                                        <label class="col-form-label col-12 col-lg-4 text-bold">Seleccione su lugar de entrega</label>
+                                        <div class="col-12 col-lg-8">
+                                            <input type="hidden" name="inp_direccion_nueva" [(ngModel)]="pedido.direccion.direccion" [required]="true">
+                                            <a class="btn btn-success" *ngIf="!pedido.direccion.direccion" href="#" (click)="$event.preventDefault(); direccionNueva()"><i class="fas fa-plus-square"></i> Agregar dirección</a>
+                                            <div class="table-responsive" *ngIf="pedido.direccion.direccion">
+                                                <table class="table table-bordered mb-1">
+                                                    <thead>
+                                                        <tr role="row">
+                                                            <th>Lugar</th>
+                                                            <th style="width: 20px;">
+                                                                <i title="Editar" class="text-muted text-size-10 fas fas fa-edit"></i>
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>
+                                                                {{pedido.direccion.direccion}}
+                                                            </td>
+                                                            <td>
+                                                                <a class="text-size-10 text-success" href="#" (click)="$event.preventDefault(); direccionEditar(pedido.direccion)"><i class="fas fas fa-edit"></i></a>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ng-template>
+                                </li>
+                                <li [ngbNavItem]="2">
+                                <a ngbNavLink><i class="fas fa-people-carry"></i> <span class="d-inline d-sm-none">&nbsp;En tienda</span> <span class="d-none d-sm-inline">&nbsp;Recojo en tienda</span></a>
+                                <ng-template ngbNavContent>
+                                    <div class="form-group row" *ngIf="!tienda.pedido_local">
+                                        <label class="col-form-label col-12 col-lg-4 text-bold">Ingrese celular de contacto <i class="fab fa-whatsapp text-success"></i></label>
+                                        <div class="col-12 col-lg-8">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">{{config.defecto.prefijo_telefono}}</span>
+                                                </div>
+                                                <input #inp_telefono="ngModel" class="form-control" name="inp_telefono" [(ngModel)]="pedido.usuario_telefono" type="tel" maxlength="10">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ng-template>
+                                </li>
+                            </ul>
+                            <div [ngbNavOutlet]="navTipoEntrega" class="mt-2"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group row" *ngIf="medio_pago && (medio_pago.indicador_efectivo || medio_pago.indicador_tarjeta || medio_pago.indicador_transferencia)">
+                        <label class="col-form-label col-12 col-lg-4 text-bold">Seleccione el método de pago</label>
+                        <div class="col-12 col-lg-8">
+                            <div class="btn-group btn-group-toggle" ngbRadioGroup name="inp_metodo_pago" [(ngModel)]="pedido.medio_pago" [required]="true">
+                                <label ngbButtonLabel class="btn-primary" [ngClass]="{'btn-primary' : pedido.medio_pago == 1, 'btn-outline-primary' : pedido.medio_pago != 1}" *ngIf="medio_pago.indicador_efectivo">
+                                    <input ngbButton type="radio" [value]="1"> Efectivo
+                                </label>
+                                <label ngbButtonLabel class="btn-primary" [ngClass]="{'btn-primary' : pedido.medio_pago == 2, 'btn-outline-primary' : pedido.medio_pago != 2}" *ngIf="medio_pago.indicador_tarjeta">
+                                    <input ngbButton type="radio" [value]="2"> Tarjeta
+                                </label>
+                                <label ngbButtonLabel class="btn-primary" [ngClass]="{'btn-primary' : pedido.medio_pago == 3, 'btn-outline-primary' : pedido.medio_pago != 3}" *ngIf="medio_pago.indicador_transferencia">
+                                    <input ngbButton type="radio" [value]="3"> Depósito
+                                </label>
+                                <label ngbButtonLabel class="btn-primary" [ngClass]="{'btn-primary' : pedido.medio_pago == 4, 'btn-outline-primary' : pedido.medio_pago != 4}" *ngIf="medio_pago.indicador_billetera">
+                                    <input ngbButton type="radio" [value]="4"> Billetera digital
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row" *ngIf="pedido.medio_pago == 1">
+                        <label class="col-form-label col-12 col-lg-4 text-bold">Monto a pagar (Billete máximo {{medio_pago.efectivo_maximo | ohCurrencyFormat:  config.moneda_defecto.simbolo : config.moneda_defecto.ICU}})</label>
+                        <div class="col-12 col-lg-8">
+                            <input currencyMask #inp_monto="ngModel" name="inp_monto" placeholder="Monto en efectivo a pagar" [(ngModel)]="pedido.monto_efectivo" [options]="config.moneda_defecto_format" [min]="total" [max]="medio_pago.efectivo_maximo" class="form-control" [required]="true">
+                        </div>
+                    </div>
+                    <div class="form-group row" *ngIf="pedido.medio_pago == 2">
+                        <label class="col-form-label col-12 col-lg-4 text-bold">Seleccione el tipo de tarjeta</label>
+                        <div class="col-12 col-lg-8">
+                            <div class="btn-group btn-group-toggle" ngbRadioGroup name="inp_tarjeta" [(ngModel)]="pedido.tarjeta_id" [required]="true">
+                                <label *ngFor="let tarjeta of medio_pago.tarjetas; let i = index" ngbButtonLabel [ngClass]="{'btn-primary' : pedido.tarjeta_id == tarjeta.tarjeta_id, 'btn-outline-primary' : pedido.tarjeta_id != tarjeta.tarjeta_id}">
+                                    <input ngbButton name="tarjeta_{{i}}" type="radio" [value]="tarjeta.tarjeta_id"> {{tarjeta.nombre}}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row" *ngIf="pedido.medio_pago == 3">
+                        <label class="col-form-label col-12 col-lg-4 text-bold">Seleccione el banco</label>
+                        <div class="col-12 col-lg-8">
+                            <input type="hidden" name="inp_tarjeta" [(ngModel)]="pedido.banco_id" [required]="true">
+                            <div class="row pt-2" *ngFor="let banco of medio_pago.bancos; let i = index">
+                                <div class="col-12">
+                                    <button class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : pedido.banco_id == banco.banco_id, 'btn-outline-success' : pedido.banco_id != banco.banco_id}" (click)="pedido.banco_id = banco.banco_id; ">
+                                        <i class="fas fa-check"></i> 
+                                        {{banco.nombre}}
+                                    </button>
+                                </div>
+                                <div class="col-6" *ngIf="pedido.banco_id == banco.banco_id">
+                                    <div class="form-group">
+                                        <label>Cuenta</label>
+                                        <div class="input-group mb-3">
+                                            <input class="form-control" name="inp_banco_cuenta_{{i}}" [(ngModel)]="banco.cuenta" [disabled]="true">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" placement="left" [ohCopyText]="banco.cuenta" ngbTooltip="Click para copiar el nro de cuenta" type="button"><i class="fas fa-copy"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6" *ngIf="pedido.banco_id == banco.banco_id">
+                                    <div class="form-group">
+                                        <label>CCI</label>
+                                        <div class="input-group mb-3">
+                                            <input class="form-control" name="inp_banco_cuenta_cci_{{i}}" [(ngModel)]="banco.cuenta_cci" [disabled]="true">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" placement="left" [ohCopyText]="banco.cuenta_cci" ngbTooltip="Click para copiar el CCI de cuenta" type="button"><i class="fas fa-copy"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row" *ngIf="pedido.medio_pago == 4">
+                        <label class="col-form-label col-12 col-lg-4 text-bold">Seleccione el tipo de billetera</label>
+                        <div class="col-12 col-lg-8">
+                            <input type="hidden" name="inp_tarjeta" [(ngModel)]="pedido.billetera_id" [required]="true">
+                            <div class="row pt-2" *ngFor="let billetera of medio_pago.billeteras; let i = index">
+                                <div class="col-12">
+                                    <button class="btn w-100 mb-2 text-left" [ngClass]="{'btn-success' : pedido.billetera_id == billetera.billetera_id, 'btn-outline-success' : pedido.billetera_id != billetera.billetera_id}" (click)="pedido.billetera_id = billetera.billetera_id; ">
+                                        <i class="fas fa-check"></i> 
+                                        {{billetera.nombre}}
+                                    </button>
+                                </div>
+                                <div class="col-12" *ngIf="pedido.billetera_id == billetera.billetera_id">
+                                    <qrcode [qrdata]="billetera.codigo" [width]="300" [errorCorrectionLevel]="'M'"></qrcode>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-form-label col-12 col-lg-4 text-bold">Comentario adicional</label>
+                        <div class="col-12 col-lg-8">
+                            <textarea class="form-control form-control-sm" name="inp_descripcion" [(ngModel)]="pedido.descripcion" placeholder="Comentario adicional" maxlength="500"></textarea>
+                            <span *ngIf="pedido.descripcion"><b>500</b>/{{pedido.descripcion.length}}</span>
+                        </div>
+                    </div>
+                </ng-template>
+                </li>
+                <li [ngbNavItem]="2" [disabled]="frmConfirm.invalid" ngbNavItem>
+                    <a ngbNavLink><i class="fas fa-file-signature"></i> Resumen</a>
+                    <ng-template ngbNavContent>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr role="row">
+                                        <th class="text-right" style="min-width: 7.5rem;">Sub total</th>
+                                        <th style="min-width: 14rem;">Producto</th>
+                                        <th class="text-right">Stock</th>
+                                        <th class="text-right" style="min-width: 7rem;">Precio U.</th>
+                                        <th class="text-right" style="min-width: 7rem; width: 7.5rem;">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let producto of carrito; let i = index">
+                                        <td class="text-right text-bold">{{producto.sub_total | ohCurrencyFormat:  config.moneda_defecto.simbolo : config.moneda_defecto.ICU}}</td>
+                                        <td>
+                                            <div style="display: inline-flex;" class="text-bold">
+                                                <div style="position: absolute; background-color: white;">#{{producto.tienda_producto_id}}</div>
+                                                <img *ngIf="producto.url" src="{{producto.url}}" class="mr-1" style="max-width: 6rem;">
+                                                <img *ngIf="!producto.url" [src]="config.url_noImage" class="mr-1" style="max-width: 6rem;">
+                                                {{producto.producto_nombre}}
+                                            </div>
+                                        </td>
+                                        <td class="text-right text-bold">
+                                            <div *ngIf="producto.indicador_stock == '1'">{{producto.stock_disponible}}</div>
+                                        </td>
+                                        <td class="text-right text-bold">{{producto.precio | ohCurrencyFormat:  config.moneda_defecto.simbolo : config.moneda_defecto.ICU}}</td>
+                                        <td class="text-right text-bold">
+                                            {{producto.cantidad}}
+                                        </td>
+                                    </tr>
+                                    <tr style="font-size: 20px;">
+                                        <td colspan="1" class="text-right text-bold">{{total | ohCurrencyFormat:  config.moneda_defecto.simbolo : config.moneda_defecto.ICU}}</td>
+                                        <td colspan="5" class="text-bold">Monto total</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div *ngIf="tienda.pedido_local" class="row">
+                            <div class="form-group col-12">
+                                <label class="col-form-label text-bold">Celular</label>
+                                <div>
+                                    <input type="tel" name="inp_usuario_telefono" disabled="true" [(ngModel)]="pedido.usuario_telefono" class="form-control">
+                                </div>
+                            </div>
+                            <div class="form-group col-6">
+                                <label class="col-form-label text-bold">Nombre</label>
+                                <div>
+                                    <input class="form-control" name="inp_usuario_nombres" disabled="true" [(ngModel)]="pedido.usuario_nombres" type="text" >
+                                </div>
+                            </div>
+                            <div class="form-group col-6">
+                                <label class="col-form-label text-bold">Apellido</label>
+                                <div>
+                                    <input class="form-control" name="inp_usuario_apellido_paterno" disabled="true" [(ngModel)]="pedido.usuario_apellido_paterno" type="text">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group row">
+                            <label class="col-form-label col-12 col-lg-4 text-bold">Forma de entrega</label>
+                            <div class="col-12 col-lg-8">
+                                <div class="btn-group btn-group-toggle" ngbRadioGroup name="inp_forma_entrega" [(ngModel)]="pedido.tipo_entrega" [disabled]="true">
+                                    <label ngbButtonLabel [ngClass]="{'btn-primary' : pedido.tipo_entrega == 1, 'btn-outline-primary' : pedido.tipo_entrega != 1}">
+                                    <input ngbButton type="radio" [value]="1"><i class="fas fa-paper-plane"></i> <span class="d-inline d-sm-none">&nbsp;Entrega</span> <span class="d-none d-sm-inline">&nbsp;Entrega a domicilio</span>
+                                    </label>
+                                    <label ngbButtonLabel [ngClass]="{'btn-primary' : pedido.tipo_entrega == 2, 'btn-outline-primary' : pedido.tipo_entrega != 2}">
+                                    <input ngbButton type="radio" [value]="2"><i class="fas fa-people-carry"></i> <span class="d-inline d-sm-none">&nbsp;En tienda</span> <span class="d-none d-sm-inline">&nbsp;Recojo en tienda</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row" *ngIf="pedido.tipo_entrega == 1">
+                            <label class="col-form-label col-12 col-lg-4 text-bold">Lugar de entrega</label>
+                            <div class="col-12 col-lg-8">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered mb-1" *ngIf="!tienda.pedido_local || (tienda.pedido_local && pedido.usuario_id)">
+                                        <thead>
+                                            <tr role="row">
+                                                <th>Lugar</th>
+                                                <th style="width: 7rem;">Teléfono</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <ng-template ngFor let-direccion [ngForOf]="usuario_direcciones" let-i="index">
+                                                <tr *ngIf="direccion.usuario_direccion_id == pedido.usuario_direccion_id">
+                                                    <td>
+                                                        {{direccion.direccion}}
+                                                    </td>
+                                                    <td>
+                                                        {{direccion.telefono}}
+                                                    </td>
+                                                </tr>
+                                            </ng-template>
+                                        </tbody>
+                                    </table>
+                                    <table class="table table-bordered mb-1" *ngIf="tienda.pedido_local && !pedido.usuario_id && pedido.direccion.direccion">
+                                        <thead>
+                                            <tr role="row">
+                                                <th>Lugar</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    {{pedido.direccion.direccion}}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row" *ngIf="medio_pago && (medio_pago.indicador_efectivo || medio_pago.indicador_tarjeta || medio_pago.indicador_transferencia)">
+                            <label class="col-form-label col-12 col-lg-4 text-bold">Metodo de pago</label>
+                            <div class="col-12 col-lg-8">
+                                <div class="btn-group btn-group-toggle" ngbRadioGroup name="inp_metodo_pago" [(ngModel)]="pedido.medio_pago" [disabled]="true">
+                                    <label ngbButtonLabel [ngClass]="{'btn-primary' : pedido.medio_pago == 1, 'btn-outline-primary' : pedido.medio_pago != 1}" *ngIf="medio_pago.indicador_efectivo">
+                                    <input ngbButton type="radio" [value]="1"> Efectivo
+                                    </label>
+                                    <label ngbButtonLabel [ngClass]="{'btn-primary' : pedido.medio_pago == 2, 'btn-outline-primary' : pedido.medio_pago != 2}" *ngIf="medio_pago.indicador_tarjeta">
+                                    <input ngbButton type="radio" [value]="2"> Tarjeta
+                                    </label>
+                                    <label ngbButtonLabel [ngClass]="{'btn-primary' : pedido.medio_pago == 3, 'btn-outline-primary' : pedido.medio_pago != 3}" *ngIf="medio_pago.indicador_transferencia">
+                                    <input ngbButton type="radio" [value]="3"> Depósito
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row" *ngIf="pedido.medio_pago == 1">
+                            <label class="col-form-label col-12 col-lg-4 text-bold">Monto a pagar</label>
+                            <div class="col-12 col-lg-8">
+                                <input currencyMask #inp_monto="ngModel" name="inp_monto" placeholder="Monto en efectivo a pagar" [(ngModel)]="pedido.monto_efectivo" [options]="config.moneda_defecto_format" [max]="medio_pago.efectivo_maximo" class="form-control" [disabled]="true">
+                            </div>
+                        </div>
+                        <div class="form-group row" *ngIf="pedido.medio_pago == 2">
+                            <label class="col-form-label col-12 col-lg-4">Tipo de tarjeta</label>
+                            <div class="col-12 col-lg-8">
+                                <div class="btn-group btn-group-toggle" ngbRadioGroup name="inp_tarjeta" [(ngModel)]="pedido.tarjeta_id" [disabled]="true">
+                                    <label *ngFor="let tarjeta of medio_pago.tarjetas; let i = index" ngbButtonLabel class="btn-primary">
+                                    <input ngbButton name="tarjeta_{{i}}" type="radio" [value]="tarjeta.tarjeta_id"> {{tarjeta.nombre}}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row" *ngIf="pedido.medio_pago == 3">
+                            <label class="col-form-label col-12 col-lg-4 text-bold">Tipo de deposito</label>
+                            <div class="col-12 col-lg-8">
+                                <input type="hidden" name="inp_tarjeta" [(ngModel)]="pedido.banco_id" [required]="true">
+                                <div class="row pt-2" *ngFor="let banco of medio_pago.bancos; let i = index">
+                                    <div class="col-12" *ngIf="pedido.banco_id == banco.banco_id">
+                                        <button class="btn w-100 mb-2 text-left btn-success">
+                                            <i class="fas fa-check"></i> 
+                                            {{banco.nombre}}
+                                        </button>
+                                    </div>
+                                    <div class="col-6" *ngIf="pedido.banco_id == banco.banco_id">
+                                        <div class="form-group">
+                                            <label>Cuenta</label>
+                                            <div class="input-group mb-3">
+                                                <input class="form-control" name="inp_pe_banco_cuenta{{i}}" [(ngModel)]="banco.cuenta" [disabled]="true">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-secondary" placement="left" [ohCopyText]="banco.cuenta" ngbTooltip="Click para copiar el nro de cuenta" type="button"><i class="fas fa-copy"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6" *ngIf="pedido.banco_id == banco.banco_id">
+                                        <div class="form-group">
+                                            <label>CCI</label>
+                                            <div class="input-group mb-3">
+                                                <input class="form-control" name="inp_pe_banco_cuenta_cci_{{i}}" [(ngModel)]="banco.cuenta_cci"  [disabled]="true">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-secondary" placement="left" [ohCopyText]="banco.cuenta_cci" ngbTooltip="Click para copiar el CCI de cuenta" type="button"><i class="fas fa-copy"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row" *ngIf="pedido.medio_pago == 4">
+                            <label class="col-form-label col-12 col-lg-4 text-bold">Billetera</label>
+                            <div class="col-12 col-lg-8">
+                                <input type="hidden" name="inp_tarjeta" [(ngModel)]="pedido.billetera_id" [required]="true">
+                                <div class="row pt-2" *ngFor="let billetera of medio_pago.billeteras; let i = index">
+                                    <div class="col-12" *ngIf="pedido.billetera_id == billetera.billetera_id">
+                                        <button class="btn w-100 mb-2 text-left btn-success">
+                                            <i class="fas fa-check"></i> 
+                                            {{billetera.nombre}}
+                                        </button>
+                                    </div>
+                                    <div class="col-12" *ngIf="pedido.billetera_id == billetera.billetera_id">
+                                        <qrcode [qrdata]="billetera.codigo" [width]="300" [errorCorrectionLevel]="'M'"></qrcode>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-form-label col-12 col-lg-4 text-bold">Comentario</label>
+                            <div class="col-12 col-lg-8">
+                                <textarea class="form-control form-control-sm" name="inp_descripcion" [(ngModel)]="pedido.descripcion" [disabled]="true"></textarea>
+                            </div>
+                        </div>
+                    </ng-template>
+                </li>
+            </ul>
+            <div [ngbNavOutlet]="navConfirmacion"></div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <div class="row" style="width: 100%;">
+            <div class="col-12 col-sm-12 col-md-6">
+                <span *ngIf="navActivo == 2" style="font-size: 20px;">
+                    Monto total : <b>{{total | ohCurrencyFormat:  config.moneda_defecto.simbolo : config.moneda_defecto.ICU}}</b>
+                </span>
+            </div>
+            <div class="col-12 col-sm-12 col-md-6 text-right">
+                <button class="btn btn-outline-danger mr-2 mt-2" (click)="c('cancel')"><i class="fas fa-times-circle"></i> Cancelar</button>
+                <button (click)="navConfirmacion.select(2); scrollArriba()" *ngIf="navActivo == 1" [disabled]="frmConfirm.invalid" class="btn btn-primary mr-2 mt-2"><i class="fas fa-hand-point-right"></i> Continuar</button>
+                <button (click)="navConfirmacion.select(1)" *ngIf="navActivo == 2" class="btn btn-primary mr-2 mt-2"><i class="fas fa-undo-alt"></i> Retornar</button>
+                <button (click)="pedir(c)" *ngIf="navActivo == 2" class="btn btn-success mt-2 mr-2"><i class="fas fa-handshake"></i> Finalizar Compra</button>
+            </div>
+        </div>
+    </div>
+</ng-template>
+<ng-template #modalDireccion let-c="close" let-d="dismiss">
+    <div class="modal-header">
+        <span class="h6 m-0">Dirección</span>
+        <a href="#" class="close text-dark" aria-label="Close" (click)="$event.preventDefault(); c('close')">
+            <i class="fas fa-times fa-xs"></i>
+        </a>
+    </div>
+    <div class="modal-body">
+        <form #frmDireccion="ngForm" class="form-enable">
+            <div class="form-group row pt-2">
+                <label class="col-form-label col-12 col-sm-4">Ubicar en el mapa</label>
+                <div class="col-12 col-sm-8">
+                    <div class="btn-group btn-group-toggle" ngbRadioGroup name="inp_indicador_mapa" [(ngModel)]="itemDireccion.indicador_mapa" [required]="true">
+                        <label ngbButtonLabel class="btn-primary" [ngClass]="{'btn-primary' : itemDireccion.indicador_mapa == true, 'btn-outline-primary' : itemDireccion.indicador_mapa == false}">
+                            <input ngbButton type="radio" [value]="true"> Si
+                        </label>
+                        <label ngbButtonLabel class="btn-primary" [ngClass]="{'btn-primary' : itemDireccion.indicador_mapa == false, 'btn-outline-primary' : itemDireccion.indicador_mapa == true}">
+                            <input ngbButton type="radio" [value]="false"> No
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div style="position: relative; width: 100%;" *ngIf="itemDireccion.indicador_mapa">
+                <oh-map-place [(latitude)]="itemDireccion.latitud" [(longitude)]="itemDireccion.longitud" [height]="350" (onSelect)="direccionMapaSeleccionar($event)" [enable_search]="true"></oh-map-place>
+            </div>
+            <div class="form-group row pt-2">
+                <label class="col-form-label col-12 col-sm-4">Dirección</label>
+                <div class="col-12 col-sm-8">
+                    <input #inp_direccion="ngModel" ohFocusOnInit class="form-control" name="inp_direccion" [(ngModel)]="itemDireccion.direccion" type="text" required="true" maxlength="500">
+                </div>
+            </div>
+            <div class="form-group row" *ngIf="!(tienda.pedido_local && !pedido.usuario_id)">
+                <label class="col-form-label col-12 col-sm-4">Celular <i class="fab fa-whatsapp text-success"></i></label>
+                <div class="col-12 col-sm-8">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">{{config.defecto.prefijo_telefono}}</span>
+                        </div>
+                        <input #inp_telefono="ngModel" class="form-control" name="inp_telefono" [(ngModel)]="itemDireccion.telefono" type="tel" maxlength="10">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row pt-2" *ngIf="!(tienda.pedido_local && !pedido.usuario_id)">
+                <label class="col-form-label col-12 col-sm-4">Marcar como principal</label>
+                <div class="col-12 col-sm-8">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" [(ngModel)]="itemDireccion.indicador_principal" name="inp_indicador_principal" id="inp_indicador_principal">
+                        <label class="custom-control-label" for="inp_indicador_principal">&nbsp;</label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-outline-dark" (click)="c('cancel')"><i class="fa fa-close"></i> Cancelar</button>
+        <button (click)="direccionGrabar(c)" [disabled]="frmDireccion.invalid" class="btn btn-success"><i class="fas fa-save"></i> Guardar</button>
+    </div>
+</ng-template>
+
+
+<ng-template #modalSeleccionarUsuario let-c="close" let-d="dismiss">
+    <div class="modal-header">
+        <span class="h6 m-0">Seleccione usuario</span>
+    </div>
+    <div class="modal-body">
+        <div class="table-responsive">
+            <table class="table table-bordered mb-1">
+                <thead>
+                    <tr role="row">
+                        <th style="width: 30px;">
+                            <div class="custom-control custom-radio">
+                                <input type="radio" id="usuario_seleccionado" name="usuario_seleccionado" class="custom-control-input" [disabled]="true">
+                                <label class="custom-control-label"  for="usuario_seleccionado">&nbsp;</label>
+                            </div>
+                        </th>
+                        <th>Nombre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let usuario of pedido_usuarios; let i = index">
+                        <td class="text-right text-bold">
+                            <div class="custom-control custom-radio">
+                                <input type="radio" id="usuario_seleccionado_{{i}}" name="usuario_seleccionado" class="custom-control-input" (change)="usuarioSeleccionar(usuario, c)">
+                                <label class="custom-control-label"  for="usuario_seleccionado_{{i}}">&nbsp;</label>
+                            </div>
+                        </td>
+                        <td>
+                            {{usuario.nombres}} {{usuario.apellido_paterno}}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</ng-template>

@@ -1,0 +1,14 @@
+.map-dir {
+    height: 500px;
+    width: 100%;
+}
+
+.oh_mapSearch {
+    position: absolute;
+    z-index: 1;
+    width: calc(100% - 55px);
+}
+
+.oh_mapInput {
+    width: calc(100% - 80px);
+}

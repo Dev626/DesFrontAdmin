@@ -1,0 +1,125 @@
+<div class="container-fluid">
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <span *ngIf="!item.banner_id">Nuevo Banner</span>
+      <span *ngIf="item.banner_id">Editar Banner</span>
+    </div>
+    <div class="card-body">
+      <form #frmAtributo="ngForm" class="form-enable">
+        <div class="form-group row">
+          <label class="col-form-label col-3">
+            <span>Tienda</span>
+          </label>
+          <div class="col-9">
+            <oh-predictive-text [(value)]="item.tienda_id" [data]="tiendas" placeholder="Seleccionar..."
+            [searchBy]="['nombre']" [return]="'tienda_id'" [openOnClick]="true" [required]="true"></oh-predictive-text>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-3">
+            <span>Alias</span>
+          </label>
+          <div class="col-9">
+            <input #inp_alias="ngModel" class="form-control" name="inp_alias" [(ngModel)]="item.alias" type="text"
+              required="true" maxlength="1000">
+            <div *ngIf="inp_alias.invalid && (inp_alias.dirty || inp_alias.touched)" class="alert-form">
+              <ul>
+                <li *ngIf="inp_alias.errors['required']">El campo es requerido.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-3">
+            <span>Title</span>
+          </label>
+          <div class="col-9">
+            <tinymce #inp_title="ngModel" name="inp_title" [(ngModel)]="item.title" [config]="{}"></tinymce>
+            <div *ngIf="inp_title.invalid && (inp_title.dirty || inp_title.touched)" class="alert-form">
+              <ul>
+                <li *ngIf="inp_title.errors['required']">El campo es requerido.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-3">
+            <span>Sub-Title</span>
+          </label>
+          <div class="col-9">
+            <input #inp_subtitle="ngModel" class="form-control" name="inp_subtitle" [(ngModel)]="item.subtitle" type="text"
+              required="true" maxlength="1000">
+            <div *ngIf="inp_subtitle.invalid && (inp_subtitle.dirty || inp_subtitle.touched)" class="alert-form">
+              <ul>
+                <li *ngIf="inp_subtitle.errors['required']">El campo es requerido.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-3">
+            <span>Imagen</span>
+          </label>
+          <div class="col-9">
+            <oh-imageUpload [fotos]="item.imagen" [ruta]="dcs.config.ruta_firestore" [config]="configFotoBanner"
+            (eventos)="eventoImagenBanner($event)" [thumbnail]="true"></oh-imageUpload>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-3">
+            <span>Texto Botón</span>
+          </label>
+          <div class="col-9">
+            <input #inp_button_text="ngModel" class="form-control" name="inp_button_text" [(ngModel)]="item.button_text" type="text"
+              required="true" maxlength="1000">
+            <div *ngIf="inp_button_text.invalid && (inp_button_text.dirty || inp_button_text.touched)" class="alert-form">
+              <ul>
+                <li *ngIf="inp_button_text.errors['required']">El campo es requerido.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-3">
+            <span>Link Botón</span>
+          </label>
+          <div class="col-9">
+            <input #inp_button_link="ngModel" class="form-control" name="inp_button_link" [(ngModel)]="item.button_link" type="text"
+              required="true" maxlength="1000">
+            <div *ngIf="inp_button_link.invalid && (inp_button_link.dirty || inp_button_link.touched)" class="alert-form">
+              <ul>
+                <li *ngIf="inp_button_link.errors['required']">El campo es requerido.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-form-label col-sm-3">
+            Estado
+          </label>
+          <div class="col-sm-9">
+            <div class="btn-group btn-group-toggle" ngbRadioGroup name="inp_active" #inp_active="ngModel"
+              required="true" [(ngModel)]="item.active">
+              <label ngbButtonLabel class="btn-outline-success">
+                <input ngbButton type="radio" [value]="true"> Activo
+              </label>
+              <label ngbButtonLabel class="btn-outline-danger">
+                <input ngbButton type="radio" [value]="false"> Inactivo
+              </label>
+            </div>
+            <div *ngIf="inp_active.invalid && (inp_active.dirty || inp_active.touched)"
+              class="alert alert-danger alert-form">
+              <ul>
+                <li *ngIf="inp_active.errors['required']">El campo es requerido.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="card-footer">
+      <button (click)="grabar()" [disabled]="frmAtributo.invalid" class="btn btn-success"><i
+          class="far fa-hand-pointer mr-1"></i>Grabar</button>
+    </div>
+  </div>
+</div>

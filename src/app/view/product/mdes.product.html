@@ -1,0 +1,91 @@
+<div id="ovnContent" class="ind-body-maxContent">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-xl-10 col-lg-12 col-md-9">
+                <div class="card o-hidden border-0 shadow-lg my-2" *ngIf="config.defecto">
+                    <mdes-nav [sistema_base]="cse.data.system" [config]="config" [doLogoutEvent]="doLogoutEvent" (onCountryChange)="countryChange($event)"></mdes-nav>
+                    <div class="card-body p-0">
+                        <div class="card shadow">
+                            <div class="card-header py-2">
+                                <div class="row">
+                                    <div class="col-12 col-md-6 pb-2">
+                                        <mdes-storeheader [config]="config" [tienda]="tienda" [medio_pago]="medio_pago" [horarios]="horarios"></mdes-storeheader>
+                                    </div>
+                                    <div class="col-12 col-md-6 text-right">
+                                        <a href="https://wa.me/{{config.defecto.prefijo_telefono+tienda.telefono}}?text={{config.whatsapp_consultar}}" target="_blank" class="btn btn-success mr-1" ngbTooltip="Consultar al vendedor por Whatsapp"><i class="fab fa-whatsapp"></i></a>
+                                        <a href="https://wa.me/?text={{whatsapp_compartirproducto_url}}" target="_blank" class="btn btn-success mr-1" ngbTooltip="Compartir producto de tienda por Whatsapp"><i class="fas fa-share-alt"></i></a>
+                                        <dsh-seller-map-location [tienda]="tienda" [config]="config" class="mr-1"></dsh-seller-map-location>
+                                        <button (click)="marcarTienda()" [routerLink]="['/Cart']" class="btn btn-primary" [disabled]="carrito.length == 0" ngbTooltip="Ver carrito de la tienda"><i class="fas fa-cart-plus"></i> Carrito ({{carrito.length}})</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="container-fluid">
+                                    <div class="row">
+                                        <div class="col-6 col-sm-4 text-center">
+                                            <div *ngIf="fotos && fotos.length > 1" style="
+                                                background: #6f6f6f;
+                                            ">
+                                                <ngb-carousel *ngIf="fotos" [showNavigationArrows]="true" [showNavigationIndicators]="true">
+                                                    <ng-template ngbSlide *ngFor="let foto of fotos">
+                                                      <div class="picsum-img-wrapper">
+                                                        <!--
+                                                        <lib-ngx-image-zoom [thumbImage]="foto.thumbnail_url" [fullImage]="foto.url"></lib-ngx-image-zoom>-->
+                                                      </div>
+                                                    </ng-template>
+                                                </ngb-carousel>
+                                            </div>
+                                            <div *ngIf="!fotos || fotos.length <= 1">
+                                                <div  *ngIf="fotos && fotos.length == 1"><!--
+                                                    <lib-ngx-image-zoom [thumbImage]="fotos[0].thumbnail_url" [fullImage]="fotos[0].url"></lib-ngx-image-zoom>-->
+                                                </div>
+                                                <!--<img *ngIf="producto.url" src="{{producto.url}}" style="max-height: 180px; max-width: 95%;">-->
+                                                <img *ngIf="!producto.url" [src]="config.url_noImage" style="max-height: 180px; max-width: 95%;">
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-sm-8">
+                                            <div class="row">
+                                                <div class="col-12 col-sm-6">
+                                                    <div class="text-bold text-primary">Producto #{{producto.tienda_producto_id}}</div>
+                                                    <h5 class="text-bold">{{producto.producto_nombre}}</h5>
+                                                </div>
+                                                <div class="col-12 col-sm-6 text-right">
+                                                    <span *ngIf="producto.indicador_stock == '0' || (producto.indicador_stock == '1' && producto.stock_disponible > 0)">
+                                                        <button class="btn btn-primary" *ngIf="!producto.agregado"  ngbTooltip="Agregar" (click)="$event.preventDefault(); carritoAgregar(producto)"><i class="fas fa-shopping-cart"></i> AGREGAR</button>
+                                                        <button class="btn btn-primary" *ngIf="producto.agregado" ngbTooltip="Quitar" (click)="$event.preventDefault(); carritoAgregar(producto)"><i class="fas fa-check"></i> AGREGADO</button>
+                                                    </span>
+                                                </div>
+                                                <div class="col-12">
+                                                    <div class="form-row">
+                                                        <div class="form-group col-6">
+                                                            <label>Precio</label>
+                                                            <p class="text-bold">{{producto.precio | ohCurrencyFormat: config.moneda_defecto.simbolo : config.moneda_defecto.ICU}}</p>
+                                                        </div>
+                                                        <div class="form-group col-6">
+                                                            <label>Stock</label>
+                                                            <p class="text-left text-bold" *ngIf="producto.indicador_stock == '1'" ngbTooltip="Stock" style="background-color: #1cc88a; color: #ffffff; padding: 4px; top: -5px; width: fit-content;">{{producto.stock_disponible}}</p>
+                                                            <span *ngIf="producto.indicador_stock == '1' && producto.stock_disponible == 0">
+                                                                <button [disabled]="true" class="btn btn-primary">AGOTADO</button>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="col-12 pt-3"><div class="card"><div class="card-body">{{producto.producto_descripcion}}</div></div> </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row text-center pt-2 pb-2">
+                            <div class="col" style="font-size: 12px;">© Delivery Smart - Powered by <a href="https://ovenfo.com/" target="_blank">Ovenfo</a></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<dsh-help [config]="config"></dsh-help>

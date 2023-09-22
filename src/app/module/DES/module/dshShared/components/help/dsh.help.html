@@ -1,0 +1,3 @@
+<div class="help" *ngIf="config && config.defecto">
+  <a (click)="$event.stopPropagation()" href="https://wa.me/{{config.defecto.prefijo_telefono+config.defecto.whatsapp_contacto}}?text={{config.buscar_whatsapp_soporte}}" target="_blank" class="btn btn-success mr-1"><i class="fab fa-whatsapp"></i> DE SOPORTE</a>
+</div>
